@@ -1,0 +1,2517 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fontmiru</title>
+<style>
+:root{
+  --bg:#ffffff; --panel:#f8f8f8; --panel2:#ebebea; --border:#d2d2cf; --border2:#b6b6b2;
+  --text:#1a1a1c; --muted:#6e6f72; --accent:#1a1a1c; --accent-text:#fff;
+  --accent-soft:rgba(0,0,0,.08); --grid:rgba(0,0,0,.16);
+  --shadow:0 1px 3px rgba(0,0,0,.10);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#151618; --panel:#1e1f22; --panel2:#27282c; --border:#35363a; --border2:#48494e;
+    --text:#e8e8e6; --muted:#8f9093; --accent:#e8e8e6; --accent-text:#161719;
+    --accent-soft:rgba(255,255,255,.09); --grid:rgba(255,255,255,.22);
+    --shadow:0 1px 3px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="light"]{
+  --bg:#ffffff; --panel:#f8f8f8; --panel2:#ebebea; --border:#d2d2cf; --border2:#b6b6b2;
+  --text:#1a1a1c; --muted:#6e6f72; --accent:#1a1a1c; --accent-text:#fff;
+  --accent-soft:rgba(0,0,0,.08); --grid:rgba(0,0,0,.16);
+  --shadow:0 1px 3px rgba(0,0,0,.10);
+}
+:root[data-theme="dark"]{
+  --bg:#151618; --panel:#1e1f22; --panel2:#27282c; --border:#35363a; --border2:#48494e;
+  --text:#e8e8e6; --muted:#8f9093; --accent:#e8e8e6; --accent-text:#161719;
+  --accent-soft:rgba(255,255,255,.09); --grid:rgba(255,255,255,.22);
+  --shadow:0 1px 3px rgba(0,0,0,.35);
+}
+html,body{height:100%;margin:0}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Yu Gothic",system-ui,sans-serif;
+  font-size:13px; line-height:1.6;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;padding:0}
+input,select{font:inherit;color:inherit}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+
+#app{display:flex;flex-direction:column;height:100vh;min-height:480px}
+
+/* ---------- header ---------- */
+header{
+  display:flex;align-items:center;gap:14px;padding:8px 14px;
+  border-bottom:1px solid var(--border);background:var(--panel);flex:none;
+}
+header h1{font-size:14px;font-weight:700;margin:0;letter-spacing:.02em}
+header h1 .shu{color:var(--accent)}
+header .tagline{color:var(--muted);font-size:11px}
+header .spacer{flex:1}
+.viewtabs{display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.viewtabs button{padding:4px 12px;color:var(--muted)}
+.viewtabs button.on{background:var(--accent);color:var(--accent-text)}
+.viewtabs button:not(.on):hover{background:var(--panel2);color:var(--text)}
+
+/* ---------- layout ---------- */
+#main{display:flex;flex:1;min-height:0}
+#sidebar{
+  width:300px;flex:none;overflow-y:auto;background:var(--panel);
+  border-right:1px solid var(--border);padding:12px;display:flex;flex-direction:column;gap:16px;
+}
+#stagewrap{flex:1;min-width:0;display:flex;flex-direction:column}
+
+/* サイドバー下部のクレジット（内容が短いときは最下部に寄せる） */
+#sidefoot{
+  margin-top:auto;padding-top:12px;border-top:1px solid var(--border);
+  font-size:11px;line-height:1.7;color:var(--muted);
+}
+#sidefoot p{margin:0}
+#sidefoot .links{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:4px}
+#sidefoot .sep{color:var(--border2)}
+#sidefoot a{color:inherit;text-decoration:underline;text-decoration-color:var(--border2);text-underline-offset:2px}
+#sidefoot a:hover{color:var(--text);text-decoration-color:currentColor}
+#sidefoot .appname{color:var(--text);font-weight:600}
+
+/* ---------- sidebar sections ---------- */
+.sec h2{
+  font-size:10px;font-weight:700;color:var(--muted);margin:0 0 8px;
+  text-transform:uppercase;letter-spacing:.14em;
+}
+.sec h2 .cnt{color:var(--accent);margin-left:4px}
+/* 見出しクリックで折りたたみ（状態は localStorage に保存） */
+.sectog{
+  display:flex;align-items:center;gap:0;font:inherit;color:inherit;
+  text-transform:inherit;letter-spacing:inherit;border-radius:4px;padding:0 4px 0 0;
+  width:100%;text-align:left; /* 見出し行のどこを押しても開閉 */
+}
+#secMix h2 .sectog{width:auto;flex:1}
+.sectog::before{ /* 線で描くシェブロン（展開 ⌄ / 折りたたみ ›） */
+  content:'';flex:none;width:5px;height:5px;margin:0 8px 3px 2px;
+  border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;
+  transform:rotate(45deg);transition:transform .15s;
+}
+.sectog:hover{color:var(--text)}
+.sec.collapsed .sectog::before{transform:rotate(-45deg);margin-bottom:0}
+.sec.collapsed > :not(h2){display:none!important}
+.sec.collapsed h2{margin-bottom:0}
+
+#drop{
+  border:1.5px dashed var(--border2);border-radius:8px;padding:14px 10px;text-align:center;
+  color:var(--muted);cursor:pointer;transition:border-color .15s,background .15s;
+}
+#drop:hover,#drop.over{border-color:var(--accent);background:var(--accent-soft);color:var(--text)}
+#drop strong{color:var(--text);font-weight:600}
+#drop .fmt{font-size:10px;margin-top:2px}
+
+#fontlist{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.fontitem{
+  display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;
+  border:1px solid transparent;cursor:pointer;
+}
+.fontitem:hover{background:var(--panel2)}
+.fontitem.on{border-color:var(--accent);background:var(--accent-soft)}
+.fontitem .fname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.fontitem .fmeta{font-size:10px;color:var(--muted);white-space:nowrap}
+.fontitem .rm{color:var(--muted);padding:0 2px;border-radius:4px;line-height:1}
+.fontitem .rm:hover{color:var(--accent)}
+.fontitem .fav.on{color:var(--text)}
+.fontitem .fav.stale{color:var(--text);opacity:.55}
+
+/* favorites */
+#favlist{display:flex;flex-direction:column;gap:2px}
+.favitem{
+  display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:6px;cursor:pointer;
+  border:1px solid transparent;
+}
+.favitem:hover{background:var(--panel2)}
+.favitem .star{flex:none;font-size:11px;color:var(--muted)}
+.favitem.loaded .star{color:var(--text)}
+.favitem .fname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.favitem .fmeta{font-size:10px;color:var(--muted);white-space:nowrap}
+.favitem .rm{color:var(--muted);padding:0 2px;border-radius:4px;line-height:1;font-size:11px;white-space:nowrap}
+.favitem .rm:hover,.favitem .rm.confirm{color:var(--accent)}
+.favitem .rm.confirm{font-weight:700}
+.hint{color:var(--muted);font-size:11px;line-height:1.5;margin:0}
+
+/* mix (混植) */
+#secMix h2{display:flex;align-items:center;gap:8px}
+#secMix h2 .chk{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:400;font-size:11px}
+.mixbase{font-size:11px;color:var(--muted);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mixbase b{color:var(--text);font-weight:600}
+.mixrow{display:flex;align-items:center;gap:6px;padding:3px 0}
+.mixrow .mk{width:64px;flex:none;font-size:11.5px;cursor:help}
+.mixrow select{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:2px 4px;font-size:11.5px}
+.mixrow input{width:46px;flex:none;text-align:right;background:var(--panel2);border:1px solid var(--border);border-radius:4px;padding:1px 4px;font-size:11px}
+.mixrow .pct{color:var(--muted);font-size:10px;flex:none}
+.mixrow.set .mk{font-weight:700}
+.mixtools{display:flex;gap:6px;align-items:center;margin-top:6px}
+
+/* axes */
+.axis{margin-bottom:10px}
+.axis .axhead{display:flex;align-items:baseline;gap:6px}
+.axis .axtag{font-weight:700;font-size:12px}
+.axis .axname{color:var(--muted);font-size:11px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.axis .axval{width:64px;text-align:right;background:var(--panel2);border:1px solid var(--border);
+  border-radius:4px;padding:1px 5px;font-size:11px}
+.axis .axplay{color:var(--muted);font-size:11px;width:20px;text-align:center;border-radius:4px}
+.axis .axplay:hover{color:var(--accent)}
+.axis .axplay.on{color:var(--accent)}
+.axis input[type=range]{width:100%;accent-color:var(--accent);margin:4px 0 0}
+.axis .axrange{display:flex;justify-content:space-between;color:var(--muted);font-size:9.5px}
+.axtools{display:flex;gap:6px;margin-bottom:10px}
+.axtools select{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:3px 6px;font-size:12px}
+.btn{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:12px}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* features */
+.feat{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);min-height:30px}
+.feat:last-child{border-bottom:none}
+.feat .ftag{font-weight:400;font-size:11.5px;width:44px;flex:none;color:var(--muted)}
+.feat .fdesc{flex:1;min-width:0;font-size:11px;color:var(--muted);line-height:1.35}
+.feat.jpf .ftag{color:var(--text);font-weight:700}
+.tri{display:flex;flex:none;border:1px solid var(--border);border-radius:5px;overflow:hidden}
+.tri button{padding:2px 7px;font-size:10px;color:var(--muted)}
+.tri button:not(:last-child){border-right:1px solid var(--border)}
+.tri button.on{background:var(--accent);color:var(--accent-text)}
+.tri button:not(.on):hover{background:var(--panel2);color:var(--text)}
+
+/* info */
+#info{font-size:11.5px}
+#info .row{display:flex;gap:8px;padding:2px 0}
+#info .k{color:var(--muted);width:88px;flex:none}
+#info .v{flex:1;min-width:0;word-break:break-all}
+.badge{display:inline-block;border:1px solid var(--border2);border-radius:4px;padding:0 5px;
+  font-size:10px;margin:1px 3px 1px 0;color:var(--muted)}
+.badge.ok{border-color:var(--accent);color:var(--accent)}
+
+/* ---------- controls bar ---------- */
+#controls{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:8px 14px;
+  border-bottom:1px solid var(--border);background:var(--panel);flex:none;
+}
+.ctl{display:flex;align-items:center;gap:6px}
+.ctl label{color:var(--muted);font-size:11px;white-space:nowrap}
+.ctl input[type=range]{accent-color:var(--accent)}
+.ctl .numin{width:52px;text-align:right;background:var(--panel2);border:1px solid var(--border);
+  border-radius:4px;padding:1px 5px;font-size:11px}
+.ctl .unit{color:var(--muted);font-size:10px;margin-left:-3px}
+.ctl select{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:3px 6px;font-size:12px}
+.seg{display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.seg button{padding:4px 11px;font-size:12px;color:var(--muted)}
+.seg button:not(:last-child){border-right:1px solid var(--border)}
+.seg button.on{background:var(--accent);color:var(--accent-text);font-weight:600}
+.seg button:not(.on):hover{background:var(--panel2);color:var(--text)}
+.chk{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:12px;cursor:pointer;user-select:none}
+.chk input{accent-color:var(--accent)}
+#sampleCtl{position:relative}
+#sampleCtl .btn{font-size:11px;padding:3px 7px}
+#samplePop{
+  position:absolute;top:calc(100% + 6px);left:0;z-index:20;
+  display:flex;gap:6px;align-items:center;
+  background:var(--panel);border:1px solid var(--border2);border-radius:8px;
+  padding:8px 10px;box-shadow:var(--shadow);
+}
+#samplePop input{
+  background:var(--panel2);border:1px solid var(--border);border-radius:6px;
+  padding:3px 8px;font-size:12px;width:170px;
+}
+
+/* ---------- stage ---------- */
+#stage{flex:1;min-height:0;display:flex;gap:1px;background:var(--border);position:relative}
+.pane{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;background:var(--bg)}
+.panelabel{
+  flex:none;padding:4px 12px;font-size:10px;color:var(--muted);
+  letter-spacing:.08em;border-bottom:1px solid var(--border);
+  display:flex;gap:8px;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.panelabel .dot{width:7px;height:7px;border-radius:50%;background:var(--border2);flex:none}
+.pane.current .panelabel .dot{background:var(--accent)}
+.previewtext{
+  flex:1;min-height:0;overflow:auto;padding:28px;outline:none;
+  white-space:pre-wrap;overflow-wrap:break-word;
+  font-family:"Hiragino Mincho ProN",serif;
+  font-kerning:none; /* 機能は font-feature-settings 側で明示制御 */
+}
+.pane.v .previewtext{writing-mode:vertical-rl}
+.previewtext.grid{
+  background-image:
+    repeating-linear-gradient(to right, var(--grid) 0 1px, transparent 1px var(--gsz,40px)),
+    repeating-linear-gradient(to bottom, var(--grid) 0 1px, transparent 1px var(--gsz,40px));
+  background-origin:content-box;background-clip:content-box;
+}
+#empty{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;color:var(--muted);text-align:center;padding:20px;background:var(--bg);z-index:5;
+}
+#empty h2{font-size:16px;margin:0;color:var(--text)}
+#empty p{margin:0;font-size:12px;max-width:34em}
+#empty .note{font-size:11px}
+
+/* instances view */
+/* glyph view */
+#glyphview{flex:1;min-height:0;display:none;flex-direction:column}
+#glyphbar{
+  display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 14px;
+  border-bottom:1px solid var(--border);background:var(--panel);flex:none;
+}
+#glyphbar select,#glyphbar input{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:12px}
+#glyphbar input{width:190px}
+#glyphCount{color:var(--muted);font-size:11px;margin-left:auto}
+#glyphgrid{
+  flex:1;min-height:0;overflow:auto;display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(104px,1fr));
+  gap:1px;background:var(--border);align-content:start;
+}
+.gcell{background:var(--bg);padding:10px 6px 8px;text-align:center;cursor:pointer;min-width:0;border:none}
+.gcell:hover{background:var(--accent-soft)}
+.gchar{font-size:34px;line-height:1.4;min-height:50px;display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--text)}
+.gname,.gcode{
+  font-size:9.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-family:"Hiragino Sans","Yu Gothic UI",system-ui,sans-serif;
+}
+.gcode{font-family:ui-monospace,"SF Mono",Menlo,monospace}
+.gmsg{grid-column:1/-1;background:var(--bg);padding:34px;color:var(--muted);text-align:center}
+
+#instview{flex:1;min-height:0;overflow:auto;padding:10px 14px;display:none}
+.instrow{display:flex;align-items:baseline;gap:14px;padding:10px 0;border-bottom:1px solid var(--border)}
+.instrow .ilabel{width:170px;flex:none;text-align:right}
+.instrow .ilabel .iname{font-size:12px;font-weight:600}
+.instrow .ilabel .icoord{font-size:10px;color:var(--muted);word-break:break-all}
+.instrow .isample{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* font detail modal */
+#modalOverlay,#gmOverlay{
+  position:fixed;inset:0;background:rgba(10,10,12,.55);display:none;
+  align-items:center;justify-content:center;z-index:60;padding:24px;
+}
+#modalOverlay.open,#gmOverlay.open{display:flex}
+#gmodal{
+  background:var(--panel);border:1px solid var(--border);border-radius:10px;
+  width:min(760px,100%);max-height:min(88vh,960px);display:flex;flex-direction:column;
+  box-shadow:0 14px 48px rgba(0,0,0,.45);
+}
+#gmHead{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border)}
+#gmChar{font-size:30px;line-height:1;min-width:40px;text-align:center}
+#gmTitle{flex:1;min-width:0}
+#gmTitle .gname{font-weight:700;font-size:13px}
+#gmTitle .gsub{color:var(--muted);font-size:11px}
+#gmClose{color:var(--muted);font-size:16px;padding:2px 6px;border-radius:5px}
+#gmClose:hover{color:var(--accent)}
+#gmBody{overflow:auto;padding:14px 18px 20px}
+#gmDiagrams{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.gmDia{flex:1;min-width:280px}
+.gmDia h3{font-size:10px;color:var(--muted);letter-spacing:.14em;margin:0 0 4px;text-transform:uppercase;font-weight:700}
+.gmDia svg{width:100%;height:auto;max-height:330px;background:var(--bg);border:1px solid var(--border);border-radius:8px;display:block}
+.gmNote{color:var(--muted);font-size:10.5px;margin:8px 0 0}
+#modal{
+  background:var(--panel);border:1px solid var(--border);border-radius:10px;
+  width:min(780px,100%);max-height:min(86vh,940px);display:flex;flex-direction:column;
+  box-shadow:0 14px 48px rgba(0,0,0,.45);
+}
+#modalHead{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border)}
+#modalTitle{font-weight:700;font-size:13px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#modalClose{color:var(--muted);font-size:16px;padding:2px 6px;border-radius:5px}
+#modalClose:hover{color:var(--accent)}
+#modalBody{overflow:auto;padding:14px 18px 20px}
+.kvsec{margin:0 0 20px}
+.kvsec h3{font-size:10px;color:var(--muted);letter-spacing:.14em;margin:0 0 4px;text-transform:uppercase;font-weight:700}
+.kv{display:flex;gap:14px;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px}
+.kv .k{color:var(--muted);flex:none;max-width:46%}
+.kv .v{
+  text-align:right;word-break:break-all;min-width:0;
+  font-family:ui-monospace,"SF Mono",Menlo,monospace;font-variant-numeric:tabular-nums;
+  background:var(--panel2);border-radius:4px;padding:0 6px;
+}
+.kv .v.empty{background:none;color:var(--muted)}
+.kv .v a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+.kv .v a:hover{color:var(--accent)}
+/* 長文（ライセンス本文など）は見出しの下に全幅で表示 */
+.kv.long{flex-direction:column;align-items:stretch;gap:4px}
+.kv.long .k{max-width:none}
+.kv.long .v{
+  text-align:left;font-family:inherit;white-space:pre-wrap;word-break:normal;overflow-wrap:anywhere;
+  max-height:10em;overflow:auto;padding:5px 8px;line-height:1.6;font-size:11.5px;
+}
+details.tbl{border-bottom:1px solid var(--border)}
+details.tbl summary{
+  display:flex;gap:12px;padding:8px 2px;cursor:pointer;align-items:baseline;list-style:none;
+}
+details.tbl summary::-webkit-details-marker{display:none}
+details.tbl summary::before{content:'▸';color:var(--muted);font-size:10px;flex:none;width:12px}
+details.tbl[open] summary::before{content:'▾'}
+details.tbl summary:hover .ttag{color:var(--accent)}
+.ttag{font-weight:700;font-size:12px;width:52px;flex:none}
+.tdesc{color:var(--muted);font-size:11px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tinfo{color:var(--muted);text-decoration:none;flex:none;font-size:13px;line-height:1;padding:0 2px;border-radius:4px}
+.tinfo:hover{color:var(--accent)}
+.tmeta{color:var(--muted);font-size:11px;flex:none}
+.tbody{padding:0 0 12px 24px}
+.hexdump{
+  font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:10.5px;line-height:1.7;
+  color:var(--muted);overflow-x:auto;white-space:pre;background:var(--panel2);
+  border-radius:6px;padding:8px 10px;
+}
+
+#toast{
+  position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
+  background:var(--text);color:var(--bg);padding:7px 16px;border-radius:8px;font-size:12px;
+  opacity:0;pointer-events:none;transition:opacity .25s;z-index:99;box-shadow:var(--shadow);
+  max-width:80vw;
+}
+#toast.show{opacity:1}
+
+input[type=file]{display:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.previewtext:focus-visible{outline-offset:-2px}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
+
+@media (max-width: 860px){
+  #app{height:auto;min-height:100vh}
+  #main{flex-direction:column}
+  #sidebar{width:100%;border-right:none;border-bottom:1px solid var(--border);max-height:45vh}
+  #stage{min-height:55vh}
+  #stage.compare{flex-direction:column}
+  header .tagline{display:none}
+  .instrow{flex-direction:column;gap:2px}
+  .instrow .ilabel{width:auto;text-align:left}
+}
+</style>
+
+<div id="app">
+<header>
+  <h1>Fontmiru</h1>
+  <span class="tagline">Beta</span>
+  <span class="spacer"></span>
+  <button id="themeBtn" class="btn" title="テーマ切替（自動 → ライト → ダーク）"></button>
+  <div class="viewtabs" role="tablist">
+    <button id="tabPreview" class="on" role="tab">プレビュー</button>
+    <button id="tabInst" role="tab">インスタンス一覧</button>
+    <button id="tabGlyphs" role="tab">グリフ一覧</button>
+  </div>
+</header>
+
+<div id="main">
+  <aside id="sidebar">
+    <section class="sec" id="secFonts">
+      <h2><button class="sectog" aria-expanded="true">フォント</button></h2>
+      <div id="drop" tabindex="0" role="button" aria-label="フォントファイルを追加">
+        <strong>フォントファイルをドロップ</strong><br>またはクリックして選択
+        <div class="fmt mono">.ttf .otf .woff .woff2 .ttc</div>
+      </div>
+      <input type="file" id="filein" multiple accept=".ttf,.otf,.woff,.woff2,.ttc,.otc,font/*">
+      <div id="fontlist"></div>
+    </section>
+
+    <section class="sec" id="secFav" hidden>
+      <h2><button class="sectog" aria-expanded="true">お気に入り<span class="cnt" id="favCnt"></span></button></h2>
+      <div id="favlist"></div>
+    </section>
+
+    <section class="sec" id="secMix" hidden>
+      <h2><button class="sectog" aria-expanded="true">混植</button><label class="chk"><input type="checkbox" id="mixChk">文字種ごとに別フォントを当てる</label></h2>
+      <div id="mixBody" hidden></div>
+    </section>
+
+    <section class="sec" id="secAxes" hidden>
+      <h2><button class="sectog" aria-expanded="true">バリアブル軸<span class="cnt" id="axCnt"></span></button></h2>
+      <div class="axtools">
+        <select id="instSel" aria-label="名前付きインスタンス"></select>
+        <button class="btn" id="axReset" title="全軸を初期値に戻す">リセット</button>
+      </div>
+      <div id="axes"></div>
+    </section>
+
+    <section class="sec" id="secFeat" hidden>
+      <h2><button class="sectog" aria-expanded="true">OpenType 機能<span class="cnt" id="ftCnt"></span></button></h2>
+      <div id="features"></div>
+    </section>
+
+    <section class="sec" id="secInfo" hidden>
+      <h2><button class="sectog" aria-expanded="true">フォント情報</button></h2>
+      <div id="info"></div>
+    </section>
+
+    <!-- クレジット（リンク先は仮。GitHub リポジトリ作成後に差し替え） -->
+    <footer id="sidefoot">
+      <p class="links">
+        <a href="https://github.com/toktaro/Fontmiru#readme" target="_blank" rel="noopener">README</a>
+        <span class="sep" aria-hidden="true">|</span>
+        <a href="https://github.com/toktaro/Fontmiru/blob/main/LICENSE.md" target="_blank" rel="noopener">LICENSE</a>
+        <span class="sep" aria-hidden="true">|</span>
+        <a href="https://github.com/toktaro/Fontmiru" target="_blank" rel="noopener">GitHub</a>
+      </p>
+      <p><span class="appname">Fontmiru</span> Beta — フォント検証ツール</p>
+      <p>© 2026– toktaro　Released under the <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a></p>
+    </footer>
+  </aside>
+
+  <div id="stagewrap">
+    <div id="controls">
+      <div class="ctl">
+        <label>組み方向</label>
+        <div class="seg" id="dirSeg">
+          <button data-dir="h" class="on">横組み</button>
+          <button data-dir="v">縦組み</button>
+        </div>
+      </div>
+      <div class="ctl" id="orientCtl" hidden>
+        <label for="orientSel">欧文の向き</label>
+        <select id="orientSel">
+          <option value="mixed">mixed（回転）</option>
+          <option value="upright">upright（正立）</option>
+          <option value="sideways">sideways</option>
+        </select>
+      </div>
+      <div class="ctl">
+        <label>揃え</label>
+        <div class="seg" id="alignSeg">
+          <button data-a="start" class="on">行頭</button>
+          <button data-a="center">中央</button>
+          <button data-a="end">行末</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <label for="sizeRange">サイズ</label>
+        <input type="range" id="sizeRange" min="10" max="160" value="36">
+        <input class="numin mono" id="sizeNum" type="text" inputmode="decimal" value="36" aria-label="サイズ（px）"><span class="unit">px</span>
+      </div>
+      <div class="ctl">
+        <label for="lhRange">行送り</label>
+        <input type="range" id="lhRange" min="100" max="300" value="135">
+        <input class="numin mono" id="lhNum" type="text" inputmode="decimal" value="1.35" aria-label="行送り（倍）">
+      </div>
+      <div class="ctl">
+        <label for="lsRange">字送り</label>
+        <input type="range" id="lsRange" min="-10" max="50" value="0">
+        <input class="numin mono" id="lsNum" type="text" inputmode="decimal" value="0" aria-label="字送り（em）"><span class="unit">em</span>
+      </div>
+      <div class="ctl" id="sampleCtl">
+        <label for="textSel">サンプル</label>
+        <select id="textSel"></select>
+        <button class="btn" id="sampleAdd" title="現在のテキストをマイサンプルとして保存">＋保存</button>
+        <button class="btn" id="sampleUpd" title="選択中のマイサンプルを現在のテキストで上書き">更新</button>
+        <button class="btn" id="sampleDel" title="選択中のマイサンプルを削除">削除</button>
+        <div id="samplePop" hidden>
+          <input type="text" id="sampleName" placeholder="サンプル名" aria-label="サンプル名">
+          <button class="btn" id="sampleSave">保存</button>
+          <button class="btn" id="sampleCancel">✕</button>
+        </div>
+      </div>
+      <label class="chk"><input type="checkbox" id="gridChk">1em グリッド</label>
+      <label class="chk"><input type="checkbox" id="cmpChk">既定と比較</label>
+    </div>
+
+    <div id="stage">
+      <div class="pane current" id="paneMain">
+        <div class="panelabel"><span class="dot"></span><span id="labelMain">現在の設定</span></div>
+        <div class="previewtext" id="pvMain" contenteditable="plaintext-only" spellcheck="false"></div>
+      </div>
+      <div class="pane" id="paneBase" hidden>
+        <div class="panelabel"><span class="dot"></span>ブラウザ既定（機能指定なし）</div>
+        <div class="previewtext" id="pvBase"></div>
+      </div>
+      <div id="empty">
+        <h2>フォントファイルを読み込んで検証を始める</h2>
+        <p>左のパネルに .ttf / .otf / .woff / .ttc をドロップしてください。バリアブル軸・OpenType 機能を解析し、縦組みや <span class="mono">palt</span>（プロポーショナルメトリクス）の効き等を確認できます。</p>
+        <p class="note">ファイルはすべてブラウザ内で処理され、外部には送信されません。</p>
+      </div>
+    </div>
+
+    <div id="instview"></div>
+
+    <div id="glyphview">
+      <div id="glyphbar">
+        <select id="blockSel" aria-label="Unicode ブロックで絞り込み"></select>
+        <input id="glyphSearch" type="search" placeholder="文字 / U+XXXX で検索" aria-label="グリフ検索">
+        <button class="btn" id="gvCopy" title="表示中の収録文字をテキストとしてコピー">文字をコピー</button>
+        <button class="btn" id="gvTxt" title="ブロックごとに整理した収録文字一覧を .txt で保存">.txt 書き出し</button>
+        <button class="btn" id="gvCsv" title="符号位置・文字・グリフ名・ブロックの一覧を .csv で保存">.csv 書き出し</button>
+        <span id="glyphCount" class="mono"></span>
+      </div>
+      <div id="glyphgrid"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="modalOverlay">
+  <div id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div id="modalHead">
+      <span id="modalTitle"></span>
+      <div class="viewtabs">
+        <button id="mTabInfo" class="on">フォント情報</button>
+        <button id="mTabSrc">テーブル</button>
+      </div>
+      <button id="modalClose" aria-label="閉じる">✕</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+<div id="gmOverlay">
+  <div id="gmodal" role="dialog" aria-modal="true" aria-labelledby="gmTitle">
+    <div id="gmHead">
+      <span id="gmChar"></span>
+      <div id="gmTitle"><div class="gname"></div><div class="gsub mono"></div></div>
+      <button id="gmClose" aria-label="閉じる">✕</button>
+    </div>
+    <div id="gmBody">
+      <div id="gmDiagrams"></div>
+      <div id="gmRows"></div>
+    </div>
+  </div>
+</div>
+<div id="toast" role="status"></div>
+
+<script>
+'use strict';
+/* =============== サンプルテキスト =============== */
+const SAMPLES = {
+  yakumono: '「約物」の詰めを確認する——（丸括弧）・【隅付き】・『二重鉤』、句読点。てにをは・ゃゅょっ、カタカナー長音。\n春はあけぼの。やうやう白くなりゆく山際、少し明かりて、紫だちたる雲の細くたなびきたる。',
+  bungaku: '吾輩は猫である。名前はまだ無い。どこで生れたかとんと見当がつかぬ。何でも薄暗いじめじめした所でニャーニャー泣いていた事だけは記憶している。吾輩はここで始めて人間というものを見た。',
+  kana: 'あめんぼあかいなあいうえお、うきもにこえびもおよいでる。\nかきのきくりのきかきくけこ、きつつきこつこつかれけやき。',
+  mix: '和文と Typography の混植——DTP では約物のアキと Kerning が命。\n2026年、Variable Font の wght 軸は 100〜900 まで滑らかに変化する。',
+  latin: 'The quick brown fox jumps over the lazy dog.\nSphinx of black quartz, judge my vow. Hamburgefonstiv 0123456789',
+  num: '2026年7月10日 12:34:56\n¥1,234,567（税込）／ 100% ／ 3.141592\n第1章・第2節・第334回',
+};
+
+/* =============== OpenType 機能の説明 =============== */
+const JP_FEATURES = ['palt','vpal','pkna','pwid','kern','vkrn','halt','vhal','chws','vchw',
+  'vert','vrt2','vkna','hkna','fwid','hwid','twid','qwid',
+  'jp78','jp83','jp90','jp04','nlck','trad','expt','ruby','ital'];
+const FEAT_DESC = {
+  palt:'プロポーショナルメトリクス（横組み）', vpal:'プロポーショナルメトリクス（縦組み）',
+  pkna:'プロポーショナル仮名', pwid:'プロポーショナル字形',
+  kern:'カーニング（横組み）', vkrn:'カーニング（縦組み）',
+  halt:'字幅半角メトリクス（横組み）', vhal:'字幅半角メトリクス（縦組み）',
+  chws:'文字組みアキ量調整（横組み）', vchw:'文字組みアキ量調整（縦組み）',
+  vert:'縦組み用字形', vrt2:'縦組み用字形（回転）',
+  vkna:'縦組み用仮名', hkna:'横組み用仮名',
+  fwid:'等幅全角字形', hwid:'等幅半角字形', twid:'等幅三分字形', qwid:'等幅四分字形',
+  jp78:'JIS78 字形', jp83:'JIS83 字形', jp90:'JIS90 字形', jp04:'JIS2004 字形',
+  nlck:'印刷標準字形', trad:'旧字体', expt:'エキスパート字形',
+  ruby:'ルビ用字形', ital:'イタリック',
+  liga:'標準合字', dlig:'任意の合字', clig:'文脈依存の合字', hlig:'歴史的合字', rlig:'必須合字',
+  calt:'文脈依存の字形', ccmp:'字体の組版処理', locl:'言語別の字形',
+  salt:'デザインのバリエーション', swsh:'スワッシュ字形', titl:'タイトル用字形',
+  onum:'オールドスタイル数字', lnum:'ライニング数字', tnum:'等幅数字', pnum:'プロポーショナル数字',
+  zero:'スラッシュ付きゼロ', frac:'分数', ordn:'序数表記', sups:'上付き文字', subs:'下付き文字',
+  sinf:'下付き添字', numr:'分子', dnom:'分母',
+  smcp:'スモールキャップ', c2sc:'大文字→スモールキャップ', 'case':'大文字に揃えた字形',
+  cpsp:'大文字間のスペーシング', mark:'マーク付加', mkmk:'マーク同士の付加', curs:'筆記体の接続',
+  aalt:'すべての異体字', dist:'距離調整', abvm:'上部マーク', blwm:'下部マーク',
+  rand:'ランダム字形', unic:'ユニケース', mgrk:'数学記号ギリシャ文字',
+};
+for (let i=1;i<=20;i++) FEAT_DESC['ss'+String(i).padStart(2,'0')] = 'スタイリスティックセット '+i;
+for (let i=1;i<=99;i++) FEAT_DESC['cv'+String(i).padStart(2,'0')] = '字形バリエーション '+i;
+
+/* =============== バイナリ解析 =============== */
+const td16 = new TextDecoder('utf-16be'), tdMac = new TextDecoder('macintosh'), td8 = new TextDecoder();
+const tag4 = (dv,o)=>String.fromCharCode(dv.getUint8(o),dv.getUint8(o+1),dv.getUint8(o+2),dv.getUint8(o+3));
+const fixed = (dv,o)=>dv.getInt32(o)/65536;
+
+function parseTableDir(dv, base){
+  const numTables = dv.getUint16(base+4);
+  const tables = {};
+  for (let i=0;i<numTables;i++){
+    const o = base+12+i*16;
+    tables[tag4(dv,o)] = { off: dv.getUint32(o+8), len: dv.getUint32(o+12) };
+  }
+  return tables;
+}
+
+function parseName(dv, off){
+  const count = dv.getUint16(off+2), strBase = off + dv.getUint16(off+4);
+  const best = {}; // nameID -> {score, str}
+  for (let i=0;i<count;i++){
+    const r = off+6+i*12;
+    const plat = dv.getUint16(r), enc = dv.getUint16(r+2), lang = dv.getUint16(r+4);
+    const id = dv.getUint16(r+6), len = dv.getUint16(r+8), so = dv.getUint16(r+10);
+    let str = null, score = 0;
+    try{
+      const bytes = new Uint8Array(dv.buffer, strBase+so, len);
+      if (plat===3 || plat===0){
+        str = td16.decode(bytes);
+        score = (plat===3 && lang===0x411) ? 4 : (plat===3 && lang===0x409) ? 3 : 2;
+      } else if (plat===1 && enc===0){
+        str = tdMac.decode(bytes); score = 1;
+      }
+    }catch(e){}
+    if (str && (!best[id] || score > best[id].score)) best[id] = {score, str};
+  }
+  const out = {};
+  for (const id in best) out[id] = best[id].str;
+  return out;
+}
+
+function parseFvar(dv, off, names){
+  const axesOff = off + dv.getUint16(off+4);
+  const axisCount = dv.getUint16(off+8), axisSize = dv.getUint16(off+10);
+  const instCount = dv.getUint16(off+12), instSize = dv.getUint16(off+14);
+  const axes = [];
+  for (let i=0;i<axisCount;i++){
+    const a = axesOff + i*axisSize;
+    axes.push({
+      tag: tag4(dv,a), min: fixed(dv,a+4), def: fixed(dv,a+8), max: fixed(dv,a+12),
+      hidden: !!(dv.getUint16(a+16)&1), name: names[dv.getUint16(a+18)] || tag4(dv,a),
+    });
+  }
+  const instances = [];
+  const instBase = axesOff + axisCount*axisSize;
+  for (let i=0;i<instCount;i++){
+    const p = instBase + i*instSize;
+    const coords = {};
+    for (let j=0;j<axisCount;j++) coords[axes[j].tag] = fixed(dv, p+4+j*4);
+    instances.push({ name: names[dv.getUint16(p)] || 'Instance '+(i+1), coords });
+  }
+  return {axes, instances};
+}
+
+function parseFeatureTags(dv, off){
+  const tags = new Set();
+  try{
+    const flOff = off + dv.getUint16(off+6);
+    const count = dv.getUint16(flOff);
+    for (let i=0;i<count;i++) tags.add(tag4(dv, flOff+2+i*6));
+  }catch(e){}
+  return tags;
+}
+
+/* cmap: 符号位置 → グリフ ID の列挙（format 4 / 12 対応） */
+function parseCmap(dv, off){
+  const n = dv.getUint16(off+2);
+  let best = null, bestScore = -1;
+  for (let i=0;i<n;i++){
+    const p = dv.getUint16(off+4+i*8), sub = off + dv.getUint32(off+8+i*8);
+    let fmt; try{ fmt = dv.getUint16(sub); }catch(e){ continue; }
+    let score = -1;
+    if (fmt === 12) score = p===3 || p===0 ? 10 : 8;
+    else if (fmt === 4) score = p===3 || p===0 ? 5 : 3;
+    if (score > bestScore){ bestScore = score; best = {sub, fmt}; }
+  }
+  if (!best) return [];
+  const out = [], CAP = 60000;
+  if (best.fmt === 12){
+    const g = dv.getUint32(best.sub+12);
+    for (let i=0;i<g;i++){
+      const o = best.sub+16+i*12;
+      const s = dv.getUint32(o), e = dv.getUint32(o+4), sg = dv.getUint32(o+8);
+      for (let c=s;c<=e && out.length<CAP;c++) out.push([c, sg+(c-s)]);
+    }
+  } else {
+    const segX2 = dv.getUint16(best.sub+6);
+    const endO = best.sub+14, startO = endO+segX2+2, deltaO = startO+segX2, rangeO = deltaO+segX2;
+    for (let s=0;s<segX2/2;s++){
+      const end = dv.getUint16(endO+s*2), start = dv.getUint16(startO+s*2);
+      const delta = dv.getInt16(deltaO+s*2), ro = dv.getUint16(rangeO+s*2);
+      if (start === 0xFFFF) continue;
+      for (let c=start;c<=end && out.length<CAP;c++){
+        let gid;
+        if (ro === 0) gid = (c+delta)&0xFFFF;
+        else {
+          const gi = dv.getUint16(rangeO+s*2+ro+(c-start)*2);
+          gid = gi === 0 ? 0 : (gi+delta)&0xFFFF;
+        }
+        if (gid) out.push([c, gid]);
+      }
+    }
+  }
+  return out;
+}
+
+/* post v2.0: グリフ ID → グリフ名（Macintosh 標準 258 名 + フォント固有名） */
+const MAC_GLYPH_NAMES = ('.notdef .null nonmarkingreturn space exclam quotedbl numbersign dollar percent ampersand quotesingle parenleft parenright asterisk plus comma hyphen period slash zero one two three four five six seven eight nine colon semicolon less equal greater question at A B C D E F G H I J K L M N O P Q R S T U V W X Y Z bracketleft backslash bracketright asciicircum underscore grave a b c d e f g h i j k l m n o p q r s t u v w x y z braceleft bar braceright asciitilde Adieresis Aring Ccedilla Eacute Ntilde Odieresis Udieresis aacute agrave acircumflex adieresis atilde aring ccedilla eacute egrave ecircumflex edieresis iacute igrave icircumflex idieresis ntilde oacute ograve ocircumflex odieresis otilde uacute ugrave ucircumflex udieresis dagger degree cent sterling section bullet paragraph germandbls registered copyright trademark acute dieresis notequal AE Oslash infinity plusminus lessequal greaterequal yen mu partialdiff summation product pi integral ordfeminine ordmasculine Omega ae oslash questiondown exclamdown logicalnot radical florin approxequal Delta guillemotleft guillemotright ellipsis nonbreakingspace Agrave Atilde Otilde OE oe endash emdash quotedblleft quotedblright quoteleft quoteright divide lozenge ydieresis Ydieresis fraction currency guilsinglleft guilsinglright fi fl daggerdbl periodcentered quotesinglbase quotedblbase perthousand Acircumflex Ecircumflex Aacute Edieresis Egrave Iacute Icircumflex Idieresis Igrave Oacute Ocircumflex apple Ograve Uacute Ucircumflex Ugrave dotlessi circumflex tilde macron breve dotaccent ring cedilla hungarumlaut ogonek caron Lslash lslash Scaron scaron Zcaron zcaron brokenbar Eth eth Yacute yacute Thorn thorn minus multiply onesuperior twosuperior threesuperior onehalf onequarter threequarters franc Gbreve gbreve Idotaccent Scedilla scedilla Cacute cacute Ccaron ccaron dcroat').split(' ');
+function parsePostNames(dv, off, len){
+  try{
+    if (dv.getUint32(off) !== 0x00020000) return null;
+    const n = dv.getUint16(off+32);
+    const idx = [];
+    for (let i=0;i<n;i++) idx.push(dv.getUint16(off+34+i*2));
+    const custom = [];
+    let p = off+34+n*2;
+    const end = off+len;
+    while (p < end){
+      const l = dv.getUint8(p);
+      let s = '';
+      for (let k=0;k<l;k++) s += String.fromCharCode(dv.getUint8(p+1+k));
+      custom.push(s); p += 1+l;
+    }
+    return idx.map(i => i < 258 ? MAC_GLYPH_NAMES[i] : (custom[i-258] || ''));
+  }catch(e){ return null; }
+}
+
+/* Unicode ブロック（絞り込み用・主要なもの） */
+const UBLOCKS = [
+  [0x0000,0x007F,'基本ラテン'],[0x0080,0x00FF,'ラテン1補助'],[0x0100,0x017F,'ラテン拡張A'],
+  [0x0180,0x024F,'ラテン拡張B'],[0x0250,0x036F,'IPA・修飾・結合記号'],[0x0370,0x03FF,'ギリシア'],
+  [0x0400,0x052F,'キリル'],[0x1E00,0x1EFF,'ラテン拡張追加'],[0x2000,0x206F,'一般句読点'],
+  [0x2070,0x209F,'上付き・下付き'],[0x20A0,0x20CF,'通貨記号'],[0x2100,0x214F,'文字様記号'],
+  [0x2150,0x218F,'数字に準じるもの'],[0x2190,0x21FF,'矢印'],[0x2200,0x22FF,'数学記号'],
+  [0x2300,0x23FF,'技術用記号'],[0x2460,0x24FF,'囲み英数字'],[0x2500,0x259F,'罫線素片・ブロック'],
+  [0x25A0,0x25FF,'幾何学模様'],[0x2600,0x26FF,'その他の記号'],[0x2700,0x27BF,'装飾記号'],
+  [0x3000,0x303F,'CJKの記号及び句読点'],[0x3040,0x309F,'ひらがな'],[0x30A0,0x30FF,'カタカナ'],
+  [0x3190,0x319F,'漢文用記号'],[0x31F0,0x31FF,'カタカナ拡張'],[0x3200,0x32FF,'囲みCJK文字・月'],
+  [0x3300,0x33FF,'CJK互換文字'],[0x3400,0x4DBF,'CJK統合漢字拡張A'],[0x4E00,0x9FFF,'CJK統合漢字'],
+  [0xF900,0xFAFF,'CJK互換漢字'],[0xFE10,0xFE1F,'縦書き形'],[0xFE30,0xFE4F,'CJK互換形'],
+  [0xFE50,0xFE6F,'小字形'],[0xFF00,0xFFEF,'半角・全角形'],[0x1F000,0x1FFFF,'記号・絵文字(SMP)'],
+  [0x20000,0x3FFFF,'CJK統合漢字拡張(面2/3)'],
+];
+function blockName(cp){
+  for (const [s,e,name] of UBLOCKS) if (cp>=s && cp<=e) return name;
+  return 'その他';
+}
+
+/* sfnt をテーブル単位で組み直して独立フォントにする（TTC の 1 面の取り出しにも使う） */
+function rebuildSfnt(srcBuf, base){
+  const dv = new DataView(srcBuf);
+  const numTables = dv.getUint16(base+4);
+  const recs = [];
+  for (let i=0;i<numTables;i++){
+    const o = base+12+i*16;
+    recs.push({tag: tag4(dv,o), csum: dv.getUint32(o+4), off: dv.getUint32(o+8), len: dv.getUint32(o+12)});
+  }
+  const pad4 = n => (n+3) & ~3;
+  let total = 12 + numTables*16;
+  for (const r of recs) total += pad4(r.len);
+  const out = new Uint8Array(total);
+  const odv = new DataView(out.buffer);
+  odv.setUint32(0, dv.getUint32(base)); // sfnt version
+  odv.setUint16(4, numTables);
+  let p = 1; while (p*2 <= numTables) p*=2;
+  odv.setUint16(6, p*16);
+  odv.setUint16(8, Math.log2(p));
+  odv.setUint16(10, numTables*16 - p*16);
+  let w = 12 + numTables*16;
+  recs.forEach((r,i)=>{
+    const ro = 12+i*16;
+    for (let k=0;k<4;k++) odv.setUint8(ro+k, r.tag.charCodeAt(k));
+    odv.setUint32(ro+4, r.csum);
+    odv.setUint32(ro+8, w);
+    odv.setUint32(ro+12, r.len);
+    out.set(new Uint8Array(srcBuf, r.off, r.len), w);
+    w += pad4(r.len);
+  });
+  return out.buffer;
+}
+
+async function inflate(bytes){
+  if (typeof DecompressionStream === 'undefined')
+    throw new Error('このブラウザは WOFF の伸長（DecompressionStream）に未対応です');
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate'));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+
+async function woffToSfnt(buf){
+  const dv = new DataView(buf);
+  const flavor = dv.getUint32(4);
+  const numTables = dv.getUint16(12);
+  const entries = [];
+  for (let i=0;i<numTables;i++){
+    const o = 44+i*20;
+    entries.push({tag: tag4(dv,o), off: dv.getUint32(o+4), comp: dv.getUint32(o+8),
+                  orig: dv.getUint32(o+12), csum: dv.getUint32(o+16)});
+  }
+  const pad4 = n => (n+3) & ~3;
+  let total = 12 + numTables*16;
+  for (const e of entries) total += pad4(e.orig);
+  const out = new Uint8Array(total);
+  const odv = new DataView(out.buffer);
+  odv.setUint32(0, flavor);
+  odv.setUint16(4, numTables);
+  let p = 1; while (p*2 <= numTables) p*=2;
+  odv.setUint16(6, p*16); odv.setUint16(8, Math.log2(p)); odv.setUint16(10, numTables*16-p*16);
+  let w = 12 + numTables*16;
+  for (let i=0;i<numTables;i++){
+    const e = entries[i], ro = 12+i*16;
+    for (let k=0;k<4;k++) odv.setUint8(ro+k, e.tag.charCodeAt(k));
+    odv.setUint32(ro+4, e.csum); odv.setUint32(ro+8, w); odv.setUint32(ro+12, e.orig);
+    const raw = new Uint8Array(buf, e.off, e.comp);
+    const data = e.comp < e.orig ? await inflate(raw) : raw;
+    out.set(data, w);
+    w += pad4(e.orig);
+  }
+  return out.buffer;
+}
+
+/* =============== フォント読み込み =============== */
+let fontSeq = 0;
+const state = {
+  fonts: [], activeId: null,
+  axisValues: {}, features: {},
+  text: SAMPLES.yakumono,
+  size: 36, lh: 1.35, ls: 0, align: 'start',
+  vertical: false, orient: 'mixed',
+  grid: false, compare: false, view: 'preview',
+  anim: {}, // tag -> {t0, raf有無はグローバル}
+  mix: { on: false, rules: {} }, // 混植: 文字種キー -> {id: フォント ID|null(=ベース), scale: %}
+};
+
+function analyzeSfnt(buf, base, fileName){
+  const dv = new DataView(buf);
+  const tables = parseTableDir(dv, base);
+  const names = tables.name ? parseName(dv, tables.name.off) : {};
+  const fvar = tables.fvar ? parseFvar(dv, tables.fvar.off, names) : {axes:[], instances:[]};
+  const gsub = tables.GSUB ? parseFeatureTags(dv, tables.GSUB.off) : new Set();
+  const gpos = tables.GPOS ? parseFeatureTags(dv, tables.GPOS.off) : new Set();
+  const upm = tables.head ? dv.getUint16(tables.head.off+18) : null;
+  const isCFF = !!tables['CFF '] || !!tables.CFF2;
+  return {
+    fileName, names, axes: fvar.axes, instances: fvar.instances, gsub, gpos, upm, isCFF,
+    sfntBuf: buf, numGlyphs: tables.maxp ? dv.getUint16(tables.maxp.off+4) : 0,
+    hasVmtx: !!tables.vmtx && !!tables.vhea,
+    displayName: names[16] && names[17] ? names[16]+' '+names[17]
+               : names[4] || (names[1] ? names[1]+(names[2]?' '+names[2]:'') : fileName),
+    version: names[5] || null,
+  };
+}
+
+async function registerFont(meta, renderBuf){
+  meta.id = ++fontSeq;
+  meta.family = 'vfc-' + meta.id;
+  const ff = new FontFace(meta.family, renderBuf);
+  await ff.load();
+  document.fonts.add(ff);
+  meta.fontFace = ff;
+  meta.renderBuf = renderBuf; // 混植用の FontFace を作り直すときに使う
+  state.fonts.push(meta);
+  return meta;
+}
+
+/* ファイル内容の同一性判定用（FNV-1a 32bit + バイト長） */
+function hashBuf(buf){
+  const u = new Uint8Array(buf);
+  let h = 0x811c9dc5;
+  for (let i=0;i<u.length;i++){ h ^= u[i]; h = Math.imul(h, 0x01000193); }
+  return (h>>>0).toString(16).padStart(8,'0') + '-' + u.length;
+}
+
+async function loadFile(file){
+  const buf = await file.arrayBuffer();
+  const added = await loadBuffer(buf, file.name);
+  // お気に入り登録用に元ファイル（TTC なら全体）を保持
+  const hash = hashBuf(buf);
+  for (const m of added){ m.srcName = file.name; m.srcBuf = buf; m.srcHash = hash; }
+  return added;
+}
+
+async function loadBuffer(buf, fileName){
+  const file = {name: fileName};
+  if (buf.byteLength < 12) throw new Error(file.name+': ファイルが小さすぎます');
+  const dv = new DataView(buf);
+  const sig = tag4(dv, 0);
+  const added = [];
+  if (sig === 'wOF2'){
+    // WOFF2 は Brotli 圧縮のためテーブル解析は不可。表示のみ対応。
+    const meta = { fileName: file.name, names:{}, axes:[], instances:[], gsub:new Set(), gpos:new Set(),
+      upm:null, hasVmtx:false, isCFF:false, woff2:true, displayName: file.name, version:null };
+    added.push(await registerFont(meta, buf));
+  } else if (sig === 'wOFF'){
+    const sfnt = await woffToSfnt(buf);
+    const meta = analyzeSfnt(sfnt, 0, file.name);
+    added.push(await registerFont(meta, sfnt));
+  } else if (sig === 'ttcf'){
+    const n = dv.getUint32(8);
+    for (let i=0;i<n;i++){
+      const faceOff = dv.getUint32(12+i*4);
+      const single = rebuildSfnt(buf, faceOff);
+      const meta = analyzeSfnt(single, 0, file.name+' #'+(i+1));
+      added.push(await registerFont(meta, single));
+    }
+  } else {
+    const v = dv.getUint32(0);
+    if (v !== 0x00010000 && sig !== 'OTTO' && sig !== 'true' && v !== 0x00020000)
+      throw new Error(file.name+': フォント形式を認識できません');
+    const meta = analyzeSfnt(buf, 0, file.name);
+    added.push(await registerFont(meta, buf));
+  }
+  return added;
+}
+
+async function handleFiles(fileList){
+  const files = [...fileList];
+  if (!files.length) return;
+  let first = null, errors = [];
+  for (const f of files){
+    try{
+      const added = await loadFile(f);
+      if (!first && added.length) first = added[0];
+    }catch(e){ console.error(e); errors.push(e.message || String(e)); }
+  }
+  if (first) selectFont(first.id);
+  renderFontList(); renderFavList(); renderMixUI();
+  if (errors.length) toast(errors.join(' / '));
+  else if (first && first.woff2) toast('WOFF2 は表示のみ対応です（軸・機能の解析には TTF/OTF/WOFF を推奨）');
+}
+
+/* =============== 状態と描画 =============== */
+const $ = id => document.getElementById(id);
+const active = () => state.fonts.find(f => f.id === state.activeId) || null;
+
+function selectFont(id){
+  state.activeId = id;
+  const f = active();
+  state.axisValues = {}; state.features = {}; stopAllAnims();
+  if (f) for (const a of f.axes) state.axisValues[a.tag] = a.def;
+  renderFontList(); renderAxes(); renderFeatures(); renderInfo();
+  applyStyles(); renderInstView(); renderGlyphView(true);
+  renderMixUI(); rebuildMix();
+}
+
+function removeFont(id){
+  const i = state.fonts.findIndex(f=>f.id===id);
+  if (i<0) return;
+  document.fonts.delete(state.fonts[i].fontFace);
+  state.fonts.splice(i,1);
+  // このフォントを当てていた混植の割り当てはベースに戻す
+  for (const r of Object.values(state.mix.rules)) if (r.id === id) r.id = null;
+  if (state.activeId === id) selectFont(state.fonts.length ? state.fonts[state.fonts.length-1].id : null);
+  else { renderFontList(); renderMixUI(); rebuildMix(); }
+  renderFavList();
+}
+
+function renderFontList(){
+  const el = $('fontlist');
+  el.innerHTML = '';
+  for (const f of state.fonts){
+    const item = document.createElement('div');
+    item.className = 'fontitem' + (f.id===state.activeId ? ' on':'');
+    item.setAttribute('role','button'); item.tabIndex = 0;
+    const meta = [];
+    if (f.axes.length) meta.push(f.axes.length+'軸');
+    if (f.woff2) meta.push('woff2');
+    const name = document.createElement('span');
+    name.className='fname'; name.textContent = f.displayName; name.title = f.fileName;
+    const m = document.createElement('span'); m.className='fmeta mono'; m.textContent = meta.join(' ');
+    const fav = favState(f);
+    const star = document.createElement('button');
+    star.className = 'rm fav' + (fav ? ' '+fav : '');
+    star.textContent = fav ? '★' : '☆';
+    star.title = fav === 'on' ? 'お気に入りから外す'
+      : fav === 'stale' ? 'お気に入りの保存版と内容が異なります — クリックでこのファイルに更新'
+      : 'お気に入りに登録（次回からお気に入り一覧で開けます）';
+    star.setAttribute('aria-label', f.displayName+' を'+star.title);
+    star.hidden = !favAvailable;
+    star.addEventListener('click', e=>{ e.stopPropagation(); toggleFavorite(f); });
+    const inf = document.createElement('button'); inf.className='rm'; inf.textContent='ⓘ';
+    inf.title = 'フォント情報・テーブルを表示';
+    inf.setAttribute('aria-label', f.displayName+' の詳細情報');
+    inf.addEventListener('click', e=>{ e.stopPropagation(); openFontDetail(f.id); });
+    const rm = document.createElement('button'); rm.className='rm'; rm.textContent='✕';
+    rm.setAttribute('aria-label', f.displayName+' を削除');
+    rm.addEventListener('click', e=>{ e.stopPropagation(); removeFont(f.id); });
+    item.append(name, m, star, inf, rm);
+    item.addEventListener('click', ()=>selectFont(f.id));
+    item.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();selectFont(f.id);} });
+    el.append(item);
+  }
+  $('empty').style.display = state.fonts.length ? 'none' : 'flex';
+}
+
+function fmtNum(n){ return Math.abs(n%1) < 0.005 ? String(Math.round(n)) : n.toFixed(2); }
+
+function renderAxes(){
+  const f = active();
+  const sec = $('secAxes');
+  if (!f || !f.axes.length){ sec.hidden = true; return; }
+  sec.hidden = false;
+  $('axCnt').textContent = f.axes.length;
+  const sel = $('instSel');
+  sel.innerHTML = '<option value="">— 名前付きインスタンス —</option>' +
+    f.instances.map((ins,i)=>`<option value="${i}">${ins.name.replace(/</g,'&lt;')}</option>`).join('');
+  sel.disabled = !f.instances.length;
+
+  const wrap = $('axes');
+  wrap.innerHTML = '';
+  for (const a of f.axes){
+    const row = document.createElement('div');
+    row.className = 'axis';
+    const step = (a.max-a.min) > 20 ? 1 : 0.01;
+    row.innerHTML = `
+      <div class="axhead">
+        <span class="axtag mono">${a.tag}</span>
+        <span class="axname" title="${a.name.replace(/"/g,'&quot;')}">${a.name.replace(/</g,'&lt;')}</span>
+        <button class="axplay mono" title="この軸をアニメーション" aria-label="${a.tag} 軸をアニメーション">▶</button>
+        <input class="axval mono" type="text" inputmode="decimal" value="${fmtNum(state.axisValues[a.tag])}" aria-label="${a.tag} の値">
+      </div>
+      <input type="range" min="${a.min}" max="${a.max}" step="${step}" value="${state.axisValues[a.tag]}" aria-label="${a.tag} スライダー">
+      <div class="axrange mono"><span>${fmtNum(a.min)}</span><span>初期値 ${fmtNum(a.def)}</span><span>${fmtNum(a.max)}</span></div>`;
+    const range = row.querySelector('input[type=range]');
+    const num = row.querySelector('.axval');
+    const play = row.querySelector('.axplay');
+    range.addEventListener('input', ()=>{ setAxis(a.tag, parseFloat(range.value)); num.value = fmtNum(state.axisValues[a.tag]); });
+    num.addEventListener('change', ()=>{
+      const v = parseFloat(num.value);
+      if (!isNaN(v)) setAxis(a.tag, v);
+      num.value = fmtNum(state.axisValues[a.tag]); range.value = state.axisValues[a.tag];
+    });
+    play.addEventListener('click', ()=>toggleAnim(a.tag));
+    row.dataset.tag = a.tag;
+    wrap.append(row);
+  }
+}
+
+function setAxis(tag, v, fromAnim){
+  const f = active(); if (!f) return;
+  const a = f.axes.find(x=>x.tag===tag); if (!a) return;
+  state.axisValues[tag] = Math.min(a.max, Math.max(a.min, v));
+  if (!fromAnim) $('instSel').value = '';
+  applyStyles(); renderInstView(false);
+}
+
+function syncAxisUI(){
+  for (const row of $('axes').children){
+    const tag = row.dataset.tag;
+    row.querySelector('input[type=range]').value = state.axisValues[tag];
+    row.querySelector('.axval').value = fmtNum(state.axisValues[tag]);
+    row.querySelector('.axplay').classList.toggle('on', !!state.anim[tag]);
+    row.querySelector('.axplay').textContent = state.anim[tag] ? '■' : '▶';
+  }
+}
+
+/* 軸アニメーション */
+let rafId = null;
+function toggleAnim(tag){
+  if (state.anim[tag]) delete state.anim[tag];
+  else state.anim[tag] = { t0: performance.now(), from: state.axisValues[tag] };
+  syncAxisUI();
+  if (Object.keys(state.anim).length && !rafId) rafId = requestAnimationFrame(animTick);
+}
+function stopAllAnims(){ state.anim = {}; if (rafId){ cancelAnimationFrame(rafId); rafId = null; } }
+function animTick(now){
+  const f = active();
+  if (!f || !Object.keys(state.anim).length){ rafId = null; return; }
+  for (const tag in state.anim){
+    const a = f.axes.find(x=>x.tag===tag); if (!a) continue;
+    const t = (now - state.anim[tag].t0) / 3000; // 周期 3 秒
+    const phase = Math.acos(Math.min(1, Math.max(-1, (state.anim[tag].from - a.min)/((a.max-a.min)||1)*2-1)));
+    state.axisValues[tag] = a.min + (a.max-a.min) * (0.5 + 0.5*Math.cos(t*Math.PI*2 + phase));
+  }
+  syncAxisUI(); applyStyles();
+  rafId = requestAnimationFrame(animTick);
+}
+
+$('instSel').addEventListener('change', e=>{
+  const f = active(); if (!f) return;
+  const ins = f.instances[+e.target.value];
+  if (!ins) return;
+  stopAllAnims();
+  Object.assign(state.axisValues, ins.coords);
+  syncAxisUI(); applyStyles(); renderInstView(false);
+});
+$('axReset').addEventListener('click', ()=>{
+  const f = active(); if (!f) return;
+  stopAllAnims();
+  for (const a of f.axes) state.axisValues[a.tag] = a.def;
+  $('instSel').value = '';
+  syncAxisUI(); applyStyles(); renderInstView(false);
+});
+
+/* OpenType 機能 */
+function renderFeatures(){
+  const f = active();
+  const sec = $('secFeat');
+  const tags = f ? [...new Set([...f.gsub, ...f.gpos])] : [];
+  if (!f || !tags.length){ sec.hidden = true; return; }
+  sec.hidden = false;
+  tags.sort((x,y)=>{
+    const xi = JP_ORDER_IDX(x), yi = JP_ORDER_IDX(y);
+    return xi !== yi ? xi - yi : x < y ? -1 : 1;
+  });
+  $('ftCnt').textContent = tags.length;
+  const wrap = $('features');
+  wrap.innerHTML = '';
+  for (const t of tags){
+    const isJP = JP_FEATURES.includes(t);
+    const row = document.createElement('div');
+    row.className = 'feat' + (isJP ? ' jpf' : '');
+    const kind = [f.gsub.has(t)?'GSUB':null, f.gpos.has(t)?'GPOS':null].filter(Boolean).join('+');
+    row.innerHTML = `
+      <span class="ftag mono">${t}</span>
+      <span class="fdesc" title="${kind}">${FEAT_DESC[t] || kind}</span>
+      <div class="tri" role="group" aria-label="${t}">
+        <button data-v="">既定</button><button data-v="1">ON</button><button data-v="0">OFF</button>
+      </div>`;
+    const btns = row.querySelectorAll('.tri button');
+    const sync = ()=>{
+      const cur = state.features[t];
+      btns.forEach(b=>b.classList.toggle('on', b.dataset.v === (cur===undefined?'':String(cur))));
+    };
+    btns.forEach(b=>b.addEventListener('click', ()=>{
+      if (b.dataset.v === '') delete state.features[t];
+      else state.features[t] = +b.dataset.v;
+      sync(); applyStyles();
+    }));
+    sync();
+    wrap.append(row);
+  }
+}
+function JP_ORDER_IDX(t){ const i = JP_FEATURES.indexOf(t); return i<0 ? 999 : i; }
+
+/* 情報 */
+function renderInfo(){
+  const f = active();
+  const sec = $('secInfo');
+  if (!f){ sec.hidden = true; return; }
+  sec.hidden = false;
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  const b = (label, ok) => `<span class="badge${ok?' ok':''}">${label}${ok?' ✓':' —'}</span>`;
+  const rows = [];
+  rows.push(['名称', esc(f.displayName)]);
+  if (f.version) rows.push(['バージョン', esc(f.version)]);
+  rows.push(['ファイル', esc(f.fileName)]);
+  if (f.upm) rows.push(['UPM', f.upm + (f.isCFF ? '（CFF）':'（TrueType）')]);
+  if (f.woff2){
+    rows.push(['注意', 'WOFF2 のためテーブル未解析（表示のみ）']);
+  } else {
+    rows.push(['縦組み対応', b('vmtx', f.hasVmtx) + b('vert', f.gsub.has('vert')||f.gsub.has('vrt2')) + b('vpal', f.gpos.has('vpal')) + b('vkrn', f.gpos.has('vkrn'))]);
+    rows.push(['詰め組み', b('palt', f.gpos.has('palt')) + b('pkna', f.gsub.has('pkna')||f.gpos.has('pkna')) + b('kern', f.gpos.has('kern'))]);
+    if (f.instances.length) rows.push(['インスタンス', f.instances.length+' 個']);
+  }
+  $('info').innerHTML = rows.map(([k,v])=>`<div class="row"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');
+  if (!f.woff2){
+    const btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.style.marginTop = '8px';
+    btn.textContent = '詳細情報・テーブルを表示…';
+    btn.addEventListener('click', ()=>openFontDetail(f.id));
+    $('info').append(btn);
+  }
+}
+
+/* =============== 混植（文字種ごとのフォント差し替え） =============== */
+// 選択中のフォントをベースに、文字種ごとに別フォント（またはサイズ比率）を当てる。
+// 実装は CSS の unicode-range: 範囲付きの FontFace だけを持つ合成ファミリーを先頭に置き、
+// 範囲外の字・差し替え先に未収録の字はベースフォントにフォールバックさせる。
+const MIX_CLASSES = [
+  {k:'kanji', label:'漢字', range:'U+2E80-2FDF, U+3005-3007, U+3021-3029, U+3038-303B, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+20000-3FFFF',
+   note:'CJK 統合漢字（拡張含む）・互換漢字・部首・々〆〇'},
+  {k:'hira', label:'ひらがな', range:'U+3041-309F, U+1B000-1B16F', note:'ひらがな・濁点類・ゝゞ・仮名補助'},
+  {k:'kata', label:'カタカナ', range:'U+30A1-30FA, U+30FC-30FF, U+31F0-31FF, U+FF66-FF9F', note:'カタカナ・長音符ー・小書き拡張・半角カナ'},
+  {k:'punct', label:'約物・記号', range:'U+2010-206F, U+3000-3004, U+3008-3020, U+3030-3037, U+303C-303F, U+30A0, U+30FB, U+FF01-FF0F, U+FF1A-FF20, U+FF3B-FF40, U+FF5B-FF65',
+   note:'和文約物（、。「」・など）・全角記号・一般句読点（— … “” など）'},
+  {k:'latin', label:'欧文', range:'U+0020-002F, U+003A-007E, U+00A0-024F, U+1E00-1EFF', note:'半角の欧文字・記号・スペース（数字を除く）'},
+  {k:'digit', label:'数字', range:'U+0030-0039', note:'半角数字 0–9'},
+];
+for (const c of MIX_CLASSES) state.mix.rules[c.k] = {id: null, scale: 100};
+const SIZE_ADJUST_OK = (()=>{ try{ return 'sizeAdjust' in FontFace.prototype; }catch(e){ return false; } })();
+let mixSeq = 0, mixFaces = [], mixFamily = null;
+
+/* 実際に効いている割り当て（ベースと同じフォント・100% のものは除く） */
+function mixSpecs(){
+  const base = active();
+  if (!state.mix.on || !base) return [];
+  const out = [];
+  for (const c of MIX_CLASSES){
+    const r = state.mix.rules[c.k];
+    const f = r.id ? state.fonts.find(x=>x.id===r.id) : base;
+    if (!f) continue;
+    const scale = SIZE_ADJUST_OK ? r.scale : 100;
+    if (f === base && scale === 100) continue;
+    out.push({c, f, scale});
+  }
+  return out;
+}
+function mixSummary(){
+  const base = active();
+  return mixSpecs().map(({c,f,scale}) =>
+    c.label+'='+(f===base ? 'ベース' : f.displayName)+(scale!==100 ? ' '+scale+'%' : '')).join('、');
+}
+
+async function rebuildMix(){
+  const seq = ++mixSeq;
+  const fam = 'vfc-mix-'+seq;
+  const faces = mixSpecs().map(({c,f,scale}) => {
+    const desc = {unicodeRange: c.range};
+    if (scale !== 100) desc.sizeAdjust = scale+'%';
+    return new FontFace(fam, f.renderBuf, desc);
+  });
+  try{ await Promise.all(faces.map(ff=>ff.load())); }
+  catch(e){ console.error(e); if (seq === mixSeq) toast('混植フォントの登録に失敗しました'); }
+  if (seq !== mixSeq) return; // より新しい再構築が走っている
+  for (const ff of mixFaces) document.fonts.delete(ff);
+  for (const ff of faces) document.fonts.add(ff);
+  mixFaces = faces;
+  mixFamily = faces.length ? fam : null;
+  applyStyles(); renderInstView();
+}
+
+function renderMixUI(){
+  const sec = $('secMix');
+  const base = active();
+  sec.hidden = !base;
+  if (!base) return;
+  $('mixChk').checked = state.mix.on;
+  const body = $('mixBody');
+  body.hidden = !state.mix.on;
+  if (!state.mix.on) return;
+  body.innerHTML = '';
+  const bl = document.createElement('div'); bl.className = 'mixbase';
+  bl.innerHTML = 'ベース: <b></b>（選択中のフォント）';
+  bl.querySelector('b').textContent = base.displayName;
+  bl.title = '未割り当ての文字種と、差し替え先に収録されていない字はベースで表示されます';
+  body.append(bl);
+  for (const c of MIX_CLASSES){
+    const r = state.mix.rules[c.k];
+    const row = document.createElement('div');
+    row.className = 'mixrow' + (r.id && r.id !== base.id ? ' set' : '');
+    const k = document.createElement('span'); k.className = 'mk'; k.textContent = c.label;
+    k.title = c.note + '\n' + c.range;
+    const sel = document.createElement('select');
+    sel.setAttribute('aria-label', c.label+' に当てるフォント');
+    const o0 = document.createElement('option'); o0.value = ''; o0.textContent = '— ベース —';
+    sel.append(o0);
+    for (const f of state.fonts){
+      if (f === base) continue;
+      const o = document.createElement('option'); o.value = f.id; o.textContent = f.displayName;
+      sel.append(o);
+    }
+    sel.value = r.id && r.id !== base.id ? String(r.id) : '';
+    sel.addEventListener('change', ()=>{
+      r.id = sel.value ? +sel.value : null;
+      row.classList.toggle('set', !!r.id);
+      rebuildMix();
+    });
+    row.append(k, sel);
+    if (SIZE_ADJUST_OK){
+      const num = document.createElement('input');
+      num.type = 'number'; num.min = 50; num.max = 150; num.step = 1; num.value = r.scale;
+      num.className = 'mono';
+      num.title = 'サイズ比率（CSS size-adjust）。ベースラインを基準に拡大縮小されます';
+      num.setAttribute('aria-label', c.label+' のサイズ比率（%）');
+      num.addEventListener('change', ()=>{
+        const v = Math.round(parseFloat(num.value));
+        r.scale = isNaN(v) ? 100 : Math.min(150, Math.max(50, v));
+        num.value = r.scale;
+        rebuildMix();
+      });
+      const pct = document.createElement('span'); pct.className = 'pct'; pct.textContent = '%';
+      row.append(num, pct);
+    }
+    body.append(row);
+  }
+  const tools = document.createElement('div'); tools.className = 'mixtools';
+  const reset = document.createElement('button'); reset.className = 'btn'; reset.textContent = '割り当てをリセット';
+  reset.addEventListener('click', ()=>{
+    for (const c of MIX_CLASSES) state.mix.rules[c.k] = {id: null, scale: 100};
+    renderMixUI(); rebuildMix();
+  });
+  tools.append(reset);
+  if (state.fonts.length < 2){
+    const p = document.createElement('p'); p.className = 'hint';
+    p.textContent = 'フォントを 2 つ以上読み込むと、文字種ごとに別のフォントを当てられます。';
+    body.append(p);
+  }
+  body.append(tools);
+}
+$('mixChk').addEventListener('change', e=>{
+  state.mix.on = e.target.checked;
+  renderMixUI(); rebuildMix();
+});
+
+/* =============== お気に入り（フォントファイルを IndexedDB に保存） =============== */
+// ブラウザはファイルのパスから再読み込みできないため、登録時にファイルの複製を保存する。
+// meta ストア = 一覧表示用の軽い情報、data ストア = ファイル本体（開くときだけ読む）。
+const FAV_DB = 'vfc-favorites';
+let favDbP = null, favs = [], favAvailable = false;
+function favDb(){
+  if (!favDbP) favDbP = new Promise((res, rej)=>{
+    let req;
+    try{ req = indexedDB.open(FAV_DB, 1); }catch(e){ rej(e); return; }
+    req.onupgradeneeded = ()=>{
+      req.result.createObjectStore('meta', {keyPath: 'key'});
+      req.result.createObjectStore('data', {keyPath: 'key'});
+    };
+    req.onsuccess = ()=>res(req.result);
+    req.onerror = ()=>rej(req.error);
+  });
+  return favDbP;
+}
+async function favTx(stores, mode, fn){
+  const db = await favDb();
+  return new Promise((res, rej)=>{
+    const tx = db.transaction(stores, mode);
+    const req = fn(tx);
+    tx.oncomplete = ()=>res(req ? req.result : undefined);
+    tx.onerror = tx.onabort = ()=>rej(tx.error);
+  });
+}
+async function favLoadList(){
+  try{
+    favs = await favTx(['meta'], 'readonly', tx=>tx.objectStore('meta').getAll());
+    favs.sort((a,b)=>a.name.localeCompare(b.name, 'ja'));
+    favAvailable = true;
+  }catch(e){ console.warn('お気に入りを利用できません', e); favAvailable = false; favs = []; }
+  renderFavList(); renderFontList();
+}
+/* 読み込み済みフォントとお気に入りの関係: null=未登録 / 'on'=登録済み / 'stale'=同名で内容が異なる */
+function favState(f){
+  if (!f.srcName) return null;
+  const fav = favs.find(x=>x.key===f.srcName);
+  if (!fav) return null;
+  return fav.hash === f.srcHash ? 'on' : 'stale';
+}
+async function toggleFavorite(f){
+  if (!favAvailable || !f.srcBuf) return;
+  const st = favState(f);
+  try{
+    if (st === 'on'){
+      await favTx(['meta','data'], 'readwrite', tx=>{
+        tx.objectStore('meta').delete(f.srcName); tx.objectStore('data').delete(f.srcName);
+      });
+      toast('「'+f.displayName+'」をお気に入りから外しました');
+    } else {
+      const faces = state.fonts.filter(x=>x.srcBuf===f.srcBuf);
+      const rec = {key: f.srcName, fileName: f.srcName, name: faces.length > 1 ? f.srcName : f.displayName,
+                   size: f.srcBuf.byteLength, hash: f.srcHash, faces: faces.length, added: Date.now()};
+      await favTx(['meta','data'], 'readwrite', tx=>{
+        tx.objectStore('meta').put(rec); tx.objectStore('data').put({key: f.srcName, data: f.srcBuf});
+      });
+      if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{});
+      toast(st === 'stale' ? '「'+rec.name+'」のお気に入りをこのファイルで更新しました'
+                           : '「'+rec.name+'」をお気に入りに登録しました');
+    }
+  }catch(e){
+    console.error(e);
+    toast('お気に入りを保存できませんでした' + (e && e.name === 'QuotaExceededError' ? '（保存容量の上限）' : ''));
+  }
+  await favLoadList();
+}
+async function openFavorite(fav){
+  const loaded = state.fonts.find(f=>f.srcName===fav.key && f.srcHash===fav.hash);
+  if (loaded){ selectFont(loaded.id); return; }
+  try{
+    const rec = await favTx(['data'], 'readonly', tx=>tx.objectStore('data').get(fav.key));
+    if (!rec || !rec.data){ toast('保存されたファイルが見つかりません'); return; }
+    await handleFiles([new File([rec.data], fav.fileName)]);
+  }catch(e){ console.error(e); toast('お気に入りを開けませんでした'); }
+}
+async function removeFavorite(fav){
+  try{
+    await favTx(['meta','data'], 'readwrite', tx=>{
+      tx.objectStore('meta').delete(fav.key); tx.objectStore('data').delete(fav.key);
+    });
+    toast('「'+fav.name+'」をお気に入りから削除しました');
+  }catch(e){ console.error(e); toast('削除できませんでした'); }
+  await favLoadList();
+}
+function fmtBytes(n){
+  return n >= 1048576 ? (n/1048576).toFixed(1)+' MB' : Math.max(1, Math.round(n/1024))+' KB';
+}
+function renderFavList(){
+  const sec = $('secFav');
+  sec.hidden = !favAvailable;
+  if (!favAvailable) return;
+  $('favCnt').textContent = favs.length || '';
+  const el = $('favlist');
+  el.innerHTML = '';
+  if (!favs.length){
+    const p = document.createElement('p'); p.className = 'hint';
+    p.textContent = '読み込んだフォントの ☆ で登録すると、次回からここをクリックするだけで開けます（ファイルの複製をこのブラウザ内に保存）。';
+    el.append(p);
+    return;
+  }
+  for (const fav of favs){
+    const loaded = state.fonts.some(f=>f.srcName===fav.key && f.srcHash===fav.hash);
+    const item = document.createElement('div');
+    item.className = 'favitem' + (loaded ? ' loaded' : '');
+    item.setAttribute('role','button'); item.tabIndex = 0;
+    item.title = fav.fileName + (loaded ? '（読み込み済み）' : '') + ' — 登録 ' + new Date(fav.added).toLocaleDateString();
+    const star = document.createElement('span'); star.className = 'star'; star.textContent = '★';
+    const name = document.createElement('span'); name.className = 'fname'; name.textContent = fav.name;
+    const m = document.createElement('span'); m.className = 'fmeta mono';
+    m.textContent = (fav.faces > 1 ? fav.faces+'書体 ' : '') + fmtBytes(fav.size);
+    const rm = document.createElement('button'); rm.className = 'rm'; rm.textContent = '✕';
+    rm.title = 'お気に入りから削除（保存したファイルの複製を消去）';
+    rm.setAttribute('aria-label', fav.name+' をお気に入りから削除');
+    let armed = null;
+    rm.addEventListener('click', e=>{
+      e.stopPropagation();
+      if (armed){ clearTimeout(armed); removeFavorite(fav); return; }
+      rm.textContent = '削除?'; rm.classList.add('confirm');
+      armed = setTimeout(()=>{ armed = null; rm.textContent = '✕'; rm.classList.remove('confirm'); }, 2500);
+    });
+    item.append(star, name, m, rm);
+    item.addEventListener('click', ()=>openFavorite(fav));
+    item.addEventListener('keydown', e=>{ if (e.key==='Enter'||e.key===' '){ e.preventDefault(); openFavorite(fav); } });
+    el.append(item);
+  }
+}
+
+/* =============== プレビューへの反映 =============== */
+function featSettings(){
+  const entries = Object.entries(state.features);
+  return entries.length ? entries.map(([t,v])=>`"${t}" ${v}`).join(', ') : 'normal';
+}
+function varSettings(){
+  const f = active();
+  if (!f || !f.axes.length) return 'normal';
+  return f.axes.map(a=>`"${a.tag}" ${state.axisValues[a.tag]}`).join(', ');
+}
+
+function fontStack(f){
+  return f ? `"${f.family}", "Hiragino Mincho ProN", serif` : '"Hiragino Mincho ProN", serif';
+}
+/* プレビュー用: 混植中は unicode-range 付きの合成ファミリーを先頭に置き、範囲外・未収録の字はベースへ落とす */
+function previewStack(){
+  const f = active();
+  return f && mixFamily ? `"${mixFamily}", ` + fontStack(f) : fontStack(f);
+}
+
+function applyStyles(){
+  const f = active();
+  const fam = fontStack(f), pfam = previewStack();
+  const vs = varSettings();
+  for (const [pane, feats] of [[$('pvMain'), featSettings()], [$('pvBase'), 'normal']]){
+    pane.style.fontFamily = pfam;
+    pane.style.fontSize = state.size+'px';
+    pane.style.lineHeight = state.lh;
+    pane.style.letterSpacing = state.ls ? (state.ls/100)+'em' : 'normal';
+    pane.style.fontVariationSettings = vs;
+    pane.style.fontFeatureSettings = feats;
+    pane.style.textAlign = state.align;
+    pane.style.textOrientation = state.vertical ? state.orient : '';
+    pane.style.setProperty('--gsz', state.size+'px');
+    pane.classList.toggle('grid', state.grid);
+  }
+  const gg = $('glyphgrid');
+  gg.style.fontFamily = fam;
+  gg.style.fontVariationSettings = vs;
+  $('paneMain').classList.toggle('v', state.vertical);
+  $('paneBase').classList.toggle('v', state.vertical);
+  const parts = [];
+  if (Object.keys(state.features).length) parts.push(featSettings());
+  const mix = mixFamily ? mixSummary() : '';
+  $('labelMain').textContent = '現在の設定' + (parts.length ? ' — '+parts.join(' ') : '（機能指定なし）')
+    + (mix ? ' ／ 混植: '+mix : '');
+}
+
+/* インスタンス一覧ビュー */
+function renderInstView(rebuild = true){
+  if (state.view !== 'inst') return;
+  const f = active();
+  const el = $('instview');
+  if (!f){ el.innerHTML = '<p style="color:var(--muted)">フォントが読み込まれていません。</p>'; return; }
+  const sample = (state.text.split('\n')[0] || 'サンプル').slice(0, 60);
+  const items = f.instances.length ? f.instances
+    : [{name:'（名前付きインスタンスなし — 現在の軸値）', coords: state.axisValues}];
+  if (rebuild || el.childElementCount !== items.length){
+    el.innerHTML = '';
+    for (const ins of items){
+      const row = document.createElement('div');
+      row.className = 'instrow';
+      const coordTxt = Object.entries(ins.coords).map(([t,v])=>t+' '+fmtNum(v)).join(' · ');
+      row.innerHTML = `<div class="ilabel"><div class="iname"></div><div class="icoord mono">${coordTxt}</div></div>
+        <div class="isample"></div>`;
+      row.querySelector('.iname').textContent = ins.name;
+      const s = row.querySelector('.isample');
+      s.textContent = sample;
+      s.style.fontFamily = previewStack();
+      s.style.fontSize = Math.min(state.size, 48)+'px';
+      s.style.fontVariationSettings = Object.entries(ins.coords).map(([t,v])=>`"${t}" ${v}`).join(', ') || 'normal';
+      s.style.fontFeatureSettings = featSettings();
+      el.append(row);
+    }
+  }
+}
+
+/* =============== コントロール =============== */
+$('dirSeg').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if (!b) return;
+  state.vertical = b.dataset.dir === 'v';
+  [...$('dirSeg').children].forEach(x=>x.classList.toggle('on', x===b));
+  $('orientCtl').hidden = !state.vertical;
+  applyStyles();
+});
+$('orientSel').addEventListener('change', e=>{ state.orient = e.target.value; applyStyles(); });
+/* サイズ・行送り・字送り: スライダー＋数値入力（数値はスライダー範囲外も入力可） */
+function bindSliderNum(rangeId, numId, o){
+  const range = $(rangeId), num = $(numId);
+  const sync = ()=>{ range.value = o.toRange(o.get()); num.value = o.fmt(o.get()); };
+  range.addEventListener('input', ()=>{ o.set(o.fromRange(+range.value)); num.value = o.fmt(o.get()); applyStyles(); o.after && o.after(); });
+  num.addEventListener('change', ()=>{
+    const v = parseFloat(num.value);
+    if (!isNaN(v)){ o.set(Math.min(o.max, Math.max(o.min, v))); applyStyles(); o.after && o.after(); }
+    sync();
+  });
+  sync();
+}
+bindSliderNum('sizeRange', 'sizeNum', {
+  get: ()=>state.size, set: v=>{ state.size = Math.round(v*10)/10; },
+  toRange: v=>v, fromRange: v=>v, fmt: v=>fmtNum(v), min: 4, max: 600,
+  after: ()=>renderInstView(false),
+});
+bindSliderNum('lhRange', 'lhNum', {
+  get: ()=>state.lh, set: v=>{ state.lh = Math.round(v*100)/100; },
+  toRange: v=>Math.round(v*100), fromRange: v=>v/100, fmt: v=>v.toFixed(2), min: 0.5, max: 5,
+});
+bindSliderNum('lsRange', 'lsNum', { // state.ls は 1/100 em 単位、入力欄は em
+  get: ()=>state.ls/100, set: v=>{ state.ls = Math.round(v*1000)/10; },
+  toRange: v=>Math.round(v*100), fromRange: v=>v/100, fmt: v=>v ? fmtNum2(v) : '0', min: -1, max: 2,
+});
+function fmtNum2(v){ return String(Math.round(v*1000)/1000); }
+$('gridChk').addEventListener('change', e=>{ state.grid = e.target.checked; applyStyles(); });
+$('cmpChk').addEventListener('change', e=>{
+  state.compare = e.target.checked;
+  $('paneBase').hidden = !state.compare;
+  $('stage').classList.toggle('compare', state.compare);
+  if (state.compare) $('pvBase').textContent = state.text;
+});
+/* サンプルテキスト管理（プリセット + マイサンプル / localStorage 保存） */
+const SAMPLE_LABELS = {yakumono:'約物・詰め検証', bungaku:'漢字かな交じり', kana:'かな',
+                       mix:'和欧混植', latin:'欧文', num:'数字・単位'};
+function loadCustomSamples(){
+  try{ return JSON.parse(localStorage.getItem('vfc-samples') || '[]'); }catch(e){ return []; }
+}
+let customSamples = loadCustomSamples();
+function saveCustomSamples(){
+  try{ localStorage.setItem('vfc-samples', JSON.stringify(customSamples)); }catch(e){}
+}
+function renderSampleSel(val){
+  const sel = $('textSel');
+  sel.innerHTML = '';
+  const og1 = document.createElement('optgroup'); og1.label = 'プリセット';
+  for (const k in SAMPLES){
+    const o = document.createElement('option');
+    o.value = 'b:'+k; o.textContent = SAMPLE_LABELS[k] || k;
+    og1.append(o);
+  }
+  sel.append(og1);
+  if (customSamples.length){
+    const og2 = document.createElement('optgroup'); og2.label = 'マイサンプル';
+    customSamples.forEach((s,i)=>{
+      const o = document.createElement('option');
+      o.value = 'c:'+i; o.textContent = s.name;
+      og2.append(o);
+    });
+    sel.append(og2);
+  }
+  sel.value = val;
+  updateSampleBtns();
+}
+function updateSampleBtns(){
+  const isCustom = $('textSel').value.startsWith('c:');
+  $('sampleUpd').style.display = isCustom ? '' : 'none';
+  $('sampleDel').style.display = isCustom ? '' : 'none';
+}
+function setSampleText(text){
+  state.text = text;
+  $('pvMain').textContent = text;
+  $('pvBase').textContent = text;
+  renderInstView();
+}
+$('textSel').addEventListener('change', e=>{
+  const v = e.target.value;
+  if (v.startsWith('b:')) setSampleText(SAMPLES[v.slice(2)]);
+  else {
+    const s = customSamples[+v.slice(2)];
+    if (s) setSampleText(s.text);
+  }
+  updateSampleBtns();
+});
+$('sampleAdd').addEventListener('click', ()=>{
+  $('sampleName').value = 'サンプル ' + (customSamples.length + 1);
+  $('samplePop').hidden = false;
+  $('sampleName').focus(); $('sampleName').select();
+});
+$('sampleCancel').addEventListener('click', ()=>{ $('samplePop').hidden = true; });
+function commitSample(){
+  const name = $('sampleName').value.trim() || 'サンプル ' + (customSamples.length + 1);
+  customSamples.push({name, text: state.text});
+  saveCustomSamples();
+  $('samplePop').hidden = true;
+  renderSampleSel('c:' + (customSamples.length - 1));
+  toast('「'+name+'」を保存しました');
+}
+$('sampleSave').addEventListener('click', commitSample);
+$('sampleName').addEventListener('keydown', e=>{
+  if (e.key === 'Enter') commitSample();
+  if (e.key === 'Escape') $('samplePop').hidden = true;
+});
+$('sampleUpd').addEventListener('click', ()=>{
+  const v = $('textSel').value;
+  if (!v.startsWith('c:')) return;
+  const s = customSamples[+v.slice(2)];
+  if (!s) return;
+  s.text = state.text;
+  saveCustomSamples();
+  toast('「'+s.name+'」を現在のテキストで更新しました');
+});
+$('sampleDel').addEventListener('click', ()=>{
+  const v = $('textSel').value;
+  if (!v.startsWith('c:')) return;
+  const i = +v.slice(2);
+  const s = customSamples[i];
+  if (!s) return;
+  customSamples.splice(i, 1);
+  saveCustomSamples();
+  renderSampleSel('b:yakumono');
+  toast('「'+s.name+'」を削除しました（テキストはそのまま）');
+});
+$('pvMain').addEventListener('input', ()=>{
+  state.text = $('pvMain').innerText;
+  if (state.compare) $('pvBase').textContent = state.text;
+  renderInstView();
+});
+
+/* =============== グリフ一覧 =============== */
+function ensureGlyphData(f){
+  if (f.glyphData !== undefined) return f.glyphData;
+  if (!f.sfntBuf){ f.glyphData = null; return null; }
+  try{
+    const dv = new DataView(f.sfntBuf);
+    const tables = parseTableDir(dv, 0);
+    const cps = tables.cmap ? parseCmap(dv, tables.cmap.off) : [];
+    const names = tables.post ? parsePostNames(dv, tables.post.off, tables.post.len) : null;
+    f.glyphData = cps.map(([cp,gid]) => ({cp, gid, name: names ? (names[gid]||'') : ''}));
+  }catch(e){ console.error(e); f.glyphData = null; }
+  return f.glyphData;
+}
+
+let gvList = [], gvShown = 0;
+const GV_CHUNK = 300;
+function gvFiltered(f){
+  const q = $('glyphSearch').value.trim();
+  const block = $('blockSel').value;
+  let list = f.glyphData;
+  if (q){
+    const m = q.match(/^(?:u\+?)?([0-9a-f]{2,6})$/i);
+    if (m){
+      const target = parseInt(m[1],16);
+      list = list.filter(g => g.cp === target);
+    } else {
+      const cps = new Set([...q].map(c => c.codePointAt(0)));
+      list = list.filter(g => cps.has(g.cp) || (g.name && g.name.toLowerCase().includes(q.toLowerCase())));
+    }
+  } else if (block){
+    list = list.filter(g => blockName(g.cp) === block);
+  }
+  return list;
+}
+function gvAppendChunk(){
+  const grid = $('glyphgrid');
+  const frag = document.createDocumentFragment();
+  const end = Math.min(gvShown + GV_CHUNK, gvList.length);
+  for (let i=gvShown; i<end; i++){
+    const g = gvList[i];
+    const cell = document.createElement('button');
+    cell.className = 'gcell';
+    cell.title = 'クリック: コピー ／ ダブルクリック: メトリクス';
+    const ch = document.createElement('div'); ch.className='gchar';
+    ch.textContent = String.fromCodePoint(g.cp);
+    const nm = document.createElement('div'); nm.className='gname';
+    nm.textContent = g.name || ' '; nm.title = g.name;
+    const cd = document.createElement('div'); cd.className='gcode';
+    cd.textContent = 'U+' + g.cp.toString(16).toUpperCase().padStart(4,'0');
+    cell.append(ch, nm, cd);
+    let clickTimer = null;
+    cell.addEventListener('click', ()=>{
+      clearTimeout(clickTimer);
+      clickTimer = setTimeout(()=>{
+        const c = String.fromCodePoint(g.cp);
+        if (navigator.clipboard) navigator.clipboard.writeText(c).then(
+          ()=>toast('「'+c+'」をコピーしました'), ()=>toast('コピーできませんでした'));
+      }, 260);
+    });
+    cell.addEventListener('dblclick', ()=>{
+      clearTimeout(clickTimer);
+      openGlyphMetrics(g);
+    });
+    frag.append(cell);
+  }
+  gvShown = end;
+  grid.append(frag);
+}
+function renderGlyphView(rebuild){
+  if (state.view !== 'glyphs') return;
+  const f = active();
+  const grid = $('glyphgrid');
+  if (!f){ grid.innerHTML = '<div class="gmsg">フォントが読み込まれていません。</div>'; $('glyphCount').textContent=''; return; }
+  const data = ensureGlyphData(f);
+  if (!data){
+    grid.innerHTML = '<div class="gmsg">このフォントはテーブルを解析できないため、グリフ一覧を表示できません（WOFF2 など）。</div>';
+    $('glyphCount').textContent = ''; return;
+  }
+  if (rebuild){
+    // ブロックの選択肢を組み直す（このフォントに存在するブロックのみ）
+    const counts = new Map();
+    for (const g of data){
+      const b = blockName(g.cp);
+      counts.set(b, (counts.get(b)||0)+1);
+    }
+    const sel = $('blockSel');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">すべてのブロック</option>' +
+      [...counts.entries()].map(([b,c])=>`<option value="${b}">${b}（${c.toLocaleString()}）</option>`).join('');
+    if ([...counts.keys()].includes(cur)) sel.value = cur;
+  }
+  gvList = gvFiltered(f);
+  gvShown = 0;
+  grid.innerHTML = '';
+  if (!gvList.length) grid.innerHTML = '<div class="gmsg">該当するグリフがありません。</div>';
+  else gvAppendChunk();
+  const encoded = data.length.toLocaleString();
+  const total = f.numGlyphs ? f.numGlyphs.toLocaleString() : '?';
+  $('glyphCount').textContent = `表示 ${gvList.length.toLocaleString()} ／ 符号化 ${encoded} ／ 総グリフ ${total}`;
+}
+$('glyphgrid').addEventListener('scroll', ()=>{
+  const g = $('glyphgrid');
+  if (gvShown < gvList.length && g.scrollHeight - g.scrollTop - g.clientHeight < 900) gvAppendChunk();
+});
+$('blockSel').addEventListener('change', ()=>renderGlyphView(false));
+$('glyphSearch').addEventListener('input', ()=>renderGlyphView(false));
+
+/* =============== グリフメトリクス（ダブルクリック） =============== */
+function readMtx(dv, d, gid, vertical){
+  const hea = vertical ? d.vhea : d.hhea, mtx = vertical ? d.vmtx : d.hmtx;
+  if (!hea || !mtx) return null;
+  try{
+    const num = dv.getUint16(hea.off+34);
+    if (gid < num) return {adv: dv.getUint16(mtx.off+gid*4), sb: dv.getInt16(mtx.off+gid*4+2)};
+    return {adv: dv.getUint16(mtx.off+(num-1)*4), sb: dv.getInt16(mtx.off+num*4+(gid-num)*2)};
+  }catch(e){ return null; }
+}
+function readGlyfBBox(dv, d, gid){
+  if (!d.glyf || !d.loca || !d.head) return null;
+  try{
+    const long = dv.getInt16(d.head.off+50) === 1;
+    const lo = long ? dv.getUint32(d.loca.off+gid*4) : dv.getUint16(d.loca.off+gid*2)*2;
+    const hi = long ? dv.getUint32(d.loca.off+gid*4+4) : dv.getUint16(d.loca.off+gid*2+2)*2;
+    if (hi <= lo) return {empty: true};
+    const g = d.glyf.off + lo;
+    return {xMin:dv.getInt16(g+2), yMin:dv.getInt16(g+4), xMax:dv.getInt16(g+6), yMax:dv.getInt16(g+8)};
+  }catch(e){ return null; }
+}
+function canvasBBox(f, cp){
+  try{
+    const size = 1000;
+    const ctx = document.createElement('canvas').getContext('2d');
+    ctx.font = size+'px "'+f.family+'"';
+    const m = ctx.measureText(String.fromCodePoint(cp));
+    const k = (f.upm || 1000)/size;
+    const r = v => Math.round(v*k);
+    const bb = {xMin: r(-m.actualBoundingBoxLeft), xMax: r(m.actualBoundingBoxRight),
+                yMin: r(-m.actualBoundingBoxDescent), yMax: r(m.actualBoundingBoxAscent)};
+    if (bb.xMin===0 && bb.xMax===0 && bb.yMin===0 && bb.yMax===0) bb.empty = true;
+    return bb;
+  }catch(e){ return null; }
+}
+function readVORG(dv, d, gid){
+  if (!d.VORG) return null;
+  try{
+    const o = d.VORG.off;
+    let y = dv.getInt16(o+4);
+    const n = dv.getUint16(o+6);
+    for (let i=0;i<n;i++){
+      if (dv.getUint16(o+8+i*4) === gid){ y = dv.getInt16(o+8+i*4+2); break; }
+    }
+    return y;
+  }catch(e){ return null; }
+}
+
+function gmKvSection(title, rows){
+  const sec = document.createElement('section');
+  sec.className = 'kvsec';
+  const h = document.createElement('h3'); h.textContent = title;
+  sec.append(h);
+  for (const [k, v] of rows){
+    const row = document.createElement('div'); row.className='kv';
+    const ks = document.createElement('span'); ks.className='k'; ks.textContent = k;
+    const vs = document.createElement('span');
+    vs.className = 'v' + (v===null || v===undefined ? ' empty':'');
+    vs.textContent = (v===null || v===undefined) ? '—' : String(v);
+    row.append(ks, vs);
+    sec.append(row);
+  }
+  return sec;
+}
+function svgEsc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+
+function gmDiagram(f, upm, ch, mode, h, v, bbox, typoAsc, typoDesc, vOrigin){
+  const fs = upm*0.038, sw = upm*0.0035, tick = upm*0.014;
+  const aw = h ? h.adv : upm;
+  // 描画域はフォント基準で固定（横・縦の両図で同一 → 同じスケールで描画される）
+  const padX = upm*0.14, padT = upm*0.13, padB = upm*0.21;
+  const xL = -padX, xR = Math.max(upm, aw) + padX;
+  const yB = typoDesc - padB, yT = typoAsc + padT;
+  const Y = y => Math.round(-y);
+  const halo = `paint-order="stroke" stroke="var(--bg)" stroke-width="${fs*0.4}" stroke-linejoin="round"`;
+  const line = (x1,y1,x2,y2,color,dash)=>
+    `<line x1="${Math.round(x1)}" y1="${Y(y1)}" x2="${Math.round(x2)}" y2="${Y(y2)}" stroke="${color}" stroke-width="${sw}"${dash?` stroke-dasharray="${upm*0.016} ${upm*0.013}"`:''}/>`;
+  const txt = (x,y,s,anchor,color)=>
+    `<text x="${Math.round(x)}" y="${Y(y)}" font-size="${fs}" fill="${color||'var(--muted)'}" ${halo} text-anchor="${anchor||'start'}" font-family="-apple-system,'Hiragino Sans',sans-serif">${svgEsc(s)}</text>`;
+  const band = (x,y,w,hh,op)=>
+    `<rect x="${Math.round(x)}" y="${Y(y+hh)}" width="${Math.round(w)}" height="${Math.round(hh)}" fill="var(--panel2)" opacity="${op}"/>`;
+  const hguide = (y, label, color)=>
+    line(xL, y, xR, y, color) + txt(xL + fs*0.4, y + fs*0.35, label);
+  const parts = [];
+  if (mode === 'h'){
+    parts.push(band(0, yB, aw, yT - yB, 0.4));
+    parts.push(band(0, typoDesc, aw, typoAsc - typoDesc, 0.5));
+    parts.push(`<text x="0" y="0" font-size="${upm}" font-family="${f.family}" fill="var(--text)">${svgEsc(ch)}</text>`);
+    parts.push(hguide(typoAsc, 'asc '+typoAsc, 'var(--border2)'));
+    parts.push(hguide(0, 'baseline 0', 'var(--muted)'));
+    parts.push(hguide(typoDesc, 'desc '+typoDesc, 'var(--border2)'));
+    parts.push(line(0, yB, 0, yT, 'var(--border2)'), txt(fs*0.35, yT - fs*1.2, '0'));
+    parts.push(line(h.adv, yB, h.adv, yT, 'var(--border2)'), txt(h.adv - fs*0.35, yT - fs*1.2, 'adv '+h.adv, 'end'));
+    parts.push(`<rect x="${bbox.xMin}" y="${Y(bbox.yMax)}" width="${bbox.xMax-bbox.xMin}" height="${bbox.yMax-bbox.yMin}" fill="none" stroke="var(--text)" stroke-width="${sw}" stroke-dasharray="${upm*0.016} ${upm*0.013}"/>`);
+    const my = typoDesc - fs*2.0;
+    const measH = (x1,x2,label)=>{
+      parts.push(line(x1,my-tick,x1,my+tick,'var(--text)'), line(x2,my-tick,x2,my+tick,'var(--text)'),
+                 line(x1,my,x2,my,'var(--text)'),
+                 txt((x1+x2)/2, my - fs*1.5, label, 'middle', 'var(--text)'));
+    };
+    measH(0, bbox.xMin, 'LSB '+h.sb);
+    measH(bbox.xMax, h.adv, 'RSB '+(h.adv - bbox.xMax));
+  } else {
+    const vTop = vOrigin, vBot = vOrigin - v.adv;
+    parts.push(band(xL, vBot, xR - xL, v.adv, 0.4));
+    parts.push(band(0, vBot, aw, v.adv, 0.5));
+    parts.push(`<text x="0" y="0" font-size="${upm}" font-family="${f.family}" fill="var(--text)">${svgEsc(ch)}</text>`);
+    parts.push(hguide(vTop, 'v-org '+vTop, 'var(--muted)'));
+    parts.push(hguide(0, 'baseline 0', 'var(--border2)'));
+    parts.push(hguide(vBot, 'v-org−adv '+vBot, 'var(--muted)'));
+    parts.push(`<rect x="${bbox.xMin}" y="${Y(bbox.yMax)}" width="${bbox.xMax-bbox.xMin}" height="${bbox.yMax-bbox.yMin}" fill="none" stroke="var(--text)" stroke-width="${sw}" stroke-dasharray="${upm*0.016} ${upm*0.013}"/>`);
+    const mx = Math.max(upm, aw) + padX*0.5;
+    const measV = (y1,y2,label)=>{
+      parts.push(line(mx-tick,y1,mx+tick,y1,'var(--text)'), line(mx-tick,y2,mx+tick,y2,'var(--text)'),
+                 line(mx,y1,mx,y2,'var(--text)'),
+                 txt(mx - fs*0.6, (y1+y2)/2 - fs*0.35, label, 'end', 'var(--text)'));
+    };
+    measV(vTop, bbox.yMax, 'TSB '+v.sb);
+    measV(bbox.yMin, vBot, 'BSB '+(v.adv - v.sb - (bbox.yMax - bbox.yMin)));
+  }
+  const wrap = document.createElement('div');
+  wrap.className = 'gmDia';
+  wrap.innerHTML = `<h3>${mode==='h'?'横組み':'縦組み'}</h3>`
+    + `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${Math.round(xL)} ${Y(yT)} ${Math.round(xR-xL)} ${Math.round(yT-yB)}">${parts.join('')}</svg>`;
+  return wrap;
+}
+
+function openGlyphMetrics(g){
+  const f = active();
+  if (!f || !f.sfntBuf) return;
+  const dv = new DataView(f.sfntBuf), d = tdir(f);
+  const upm = f.upm || 1000;
+  const h = readMtx(dv, d, g.gid, false);
+  const v = readMtx(dv, d, g.gid, true);
+  let bbox = readGlyfBBox(dv, d, g.gid), bboxSrc = 'glyf';
+  if (!bbox){ bbox = canvasBBox(f, g.cp); bboxSrc = 'canvas'; }
+  const empty = !bbox || bbox.empty;
+  const os2 = d['OS/2'];
+  const typoAsc = os2 ? dv.getInt16(os2.off+68) : Math.round(upm*0.88);
+  const typoDesc = os2 ? dv.getInt16(os2.off+70) : -Math.round(upm*0.12);
+  const vorg = readVORG(dv, d, g.gid);
+  const vOrigin = vorg !== null ? vorg : typoAsc;
+  const ch = String.fromCodePoint(g.cp);
+
+  $('gmChar').textContent = ch;
+  $('gmChar').style.fontFamily = '"'+f.family+'"';
+  document.querySelector('#gmTitle .gname').textContent = g.name || '（グリフ名なし）';
+  document.querySelector('#gmTitle .gsub').textContent =
+    'U+'+g.cp.toString(16).toUpperCase().padStart(4,'0') + ' ・ GID '+g.gid + ' ・ '+f.displayName;
+
+  const dias = $('gmDiagrams');
+  dias.innerHTML = '';
+  if (!empty && h) dias.append(gmDiagram(f, upm, ch, 'h', h, v, bbox, typoAsc, typoDesc, vOrigin));
+  if (!empty && v) dias.append(gmDiagram(f, upm, ch, 'v', h, v, bbox, typoAsc, typoDesc, vOrigin));
+
+  const rows = $('gmRows');
+  rows.innerHTML = '';
+  if (h) rows.append(gmKvSection('横組み', [
+    ['送り幅（advanceWidth）', h.adv],
+    ['左サイドベアリング（LSB）', h.sb],
+    ['右サイドベアリング（RSB）', empty ? null : h.adv - bbox.xMax],
+    ['字幅（xMax − xMin）', empty ? null : bbox.xMax - bbox.xMin],
+  ]));
+  if (v) rows.append(gmKvSection('縦組み', [
+    ['送り高（advanceHeight）', v.adv],
+    ['上サイドベアリング（TSB）', v.sb],
+    ['下サイドベアリング（BSB）', empty ? null : v.adv - v.sb - (bbox.yMax - bbox.yMin)],
+    ['字高（yMax − yMin）', empty ? null : bbox.yMax - bbox.yMin],
+    ['縦原点 Y（VORG）', vorg],
+  ]));
+  rows.append(gmKvSection('バウンディングボックス', empty
+    ? [['アウトライン', 'なし（空グリフ）']]
+    : [['xMin', bbox.xMin], ['xMax', bbox.xMax], ['yMin', bbox.yMin], ['yMax', bbox.yMax]]));
+  rows.append(gmKvSection('フォント基準値', [
+    ['UPM', upm], ['typoAscender', typoAsc], ['typoDescender', typoDesc], ['ベースライン', 0],
+  ]));
+  const notes = [];
+  if (bboxSrc === 'canvas' && !empty)
+    notes.push('バウンディングボックスと派生値（RSB・BSB・字幅・字高）はブラウザによる実測の概算です（CFF アウトラインのため glyf からの取得不可）。');
+  if (f.axes.length)
+    notes.push('数値は既定インスタンスの値です（バリアブル軸のデルタ gvar / HVAR / VVAR は未適用）。');
+  if (notes.length){
+    const n = document.createElement('p'); n.className='gmNote';
+    n.textContent = '※ ' + notes.join(' ');
+    rows.append(n);
+  }
+  $('gmOverlay').classList.add('open');
+  $('gmClose').focus();
+}
+function closeGlyphMetrics(){ $('gmOverlay').classList.remove('open'); }
+$('gmClose').addEventListener('click', closeGlyphMetrics);
+$('gmOverlay').addEventListener('click', e=>{ if (e.target === $('gmOverlay')) closeGlyphMetrics(); });
+
+/* 収録文字一覧のコピー・書き出し（絞り込み中は表示中の一覧が対象） */
+function gvExportList(){
+  const f = active();
+  if (!f || !f.glyphData || !gvList.length){ toast('書き出せるグリフがありません'); return null; }
+  return {f, list: gvList};
+}
+function downloadText(fileName, text, mime){
+  const blob = new Blob([text], {type: mime || 'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = fileName;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
+}
+function safeFileName(s){ return s.replace(/[\\/:*?"<>|]/g,'_').replace(/\s+/g,'_'); }
+
+$('gvCopy').addEventListener('click', ()=>{
+  const d = gvExportList(); if (!d) return;
+  const text = d.list.map(g=>String.fromCodePoint(g.cp)).join('');
+  if (!navigator.clipboard){ toast('このブラウザではコピーできません'); return; }
+  navigator.clipboard.writeText(text).then(
+    ()=>toast(d.list.length.toLocaleString()+' 字をコピーしました'),
+    ()=>toast('コピーできませんでした'));
+});
+
+$('gvTxt').addEventListener('click', ()=>{
+  const d = gvExportList(); if (!d) return;
+  const byBlock = new Map();
+  for (const g of d.list){
+    const b = blockName(g.cp);
+    if (!byBlock.has(b)) byBlock.set(b, []);
+    byBlock.get(b).push(String.fromCodePoint(g.cp));
+  }
+  const lines = ['# '+d.f.displayName+' 収録文字一覧（'+d.list.length.toLocaleString()+' 字）',
+                 '# 生成: Fontmiru / '+new Date().toISOString().slice(0,10), ''];
+  for (const [b, chars] of byBlock){
+    lines.push('## '+b+'（'+chars.length.toLocaleString()+'）');
+    for (let i=0;i<chars.length;i+=50) lines.push(chars.slice(i,i+50).join(''));
+    lines.push('');
+  }
+  downloadText(safeFileName(d.f.displayName)+'_glyphs.txt', lines.join('\n'));
+  toast('.txt を書き出しました（'+d.list.length.toLocaleString()+' 字）');
+});
+
+$('gvCsv').addEventListener('click', ()=>{
+  const d = gvExportList(); if (!d) return;
+  const esc = s => '"'+String(s).replace(/"/g,'""')+'"';
+  const rows = ['codepoint,char,glyph_name,unicode_block'];
+  for (const g of d.list){
+    rows.push(['U+'+g.cp.toString(16).toUpperCase().padStart(4,'0'),
+               esc(String.fromCodePoint(g.cp)), esc(g.name||''), esc(blockName(g.cp))].join(','));
+  }
+  // Excel で開けるよう BOM 付き UTF-8
+  downloadText(safeFileName(d.f.displayName)+'_glyphs.csv', '\uFEFF'+rows.join('\r\n'), 'text/csv;charset=utf-8');
+  toast('.csv を書き出しました（'+d.list.length.toLocaleString()+' 行）');
+});
+
+/* =============== フォント詳細（情報・テーブル） =============== */
+const NAME_ID_LABELS = {
+  0:'著作権', 1:'ファミリー名', 2:'サブファミリー名', 3:'固有フォント識別子', 4:'フルフォント名',
+  5:'バージョン', 6:'PostScript 名', 7:'商標', 8:'製造者', 9:'デザイナー', 10:'説明',
+  11:'ベンダー URL', 12:'デザイナー URL', 13:'ライセンス', 14:'ライセンス URL',
+  16:'Typographic ファミリー名', 17:'Typographic サブファミリー名', 18:'互換フルネーム',
+  19:'サンプルテキスト', 20:'PS CID findfont 名', 21:'WWS ファミリー名', 22:'WWS サブファミリー名',
+  25:'可変フォント PS 名接頭辞',
+};
+const TABLE_DESC = {
+  head:'フォント全体のヘッダ', hhea:'横組みメトリクスのヘッダ', hmtx:'横組みメトリクス',
+  vhea:'縦組みメトリクスのヘッダ', vmtx:'縦組みメトリクス', maxp:'グリフ数などの上限値',
+  name:'名前テーブル', 'OS/2':'Windows 互換メトリクス・分類', post:'PostScript 関連・グリフ名',
+  cmap:'符号位置 → グリフ対応', glyf:'TrueType アウトライン', loca:'glyf のオフセット',
+  'CFF ':'CFF アウトライン', CFF2:'CFF2 アウトライン（可変対応）',
+  fvar:'バリアブル軸の定義', gvar:'TrueType 可変デルタ', avar:'軸値のマッピング',
+  HVAR:'横メトリクスの可変データ', VVAR:'縦メトリクスの可変データ', MVAR:'各種メトリクスの可変データ',
+  STAT:'スタイル属性', GSUB:'グリフ置換（OpenType 機能）', GPOS:'グリフ配置（OpenType 機能）',
+  GDEF:'グリフ定義', BASE:'ベースライン情報', JSTF:'行組版調整', kern:'旧式カーニング',
+  meta:'メタデータ', DSIG:'電子署名', hdmx:'デバイスメトリクス', VORG:'縦組みの原点',
+  mort:'AAT 変形（旧）', morx:'AAT 変形', feat:'AAT 機能', trak:'AAT トラッキング',
+  prep:'ヒント（プリプログラム）', fpgm:'ヒント（関数）', 'cvt ':'ヒント（コントロール値）',
+  gasp:'グレースケール描画指示', sbix:'ビットマップ（Apple）', EBDT:'ビットマップデータ',
+  EBLC:'ビットマップ位置', CBDT:'カラービットマップ', CBLC:'カラービットマップ位置',
+  COLR:'カラーグリフ', CPAL:'カラーパレット', SVG:'SVG グリフ',
+};
+
+function tdir(f){
+  if (!f._tdir && f.sfntBuf) f._tdir = parseTableDir(new DataView(f.sfntBuf), 0);
+  return f._tdir || null;
+}
+function longDateTime(dv, o){
+  try{
+    const secs = Number(dv.getBigInt64(o));
+    if (!secs) return null;
+    const d = new Date((secs - 2082844800) * 1000);
+    return isNaN(d) ? null : d.toISOString().slice(0,10);
+  }catch(e){ return null; }
+}
+function fsTypeLabel(v){
+  if (v === 0) return '0（制限なし・インストール可）';
+  const bits = [];
+  if (v & 0x2) bits.push('使用不可');
+  if (v & 0x4) bits.push('プレビュー・印刷のみ');
+  if (v & 0x8) bits.push('編集可能');
+  if (v & 0x100) bits.push('サブセット不可');
+  if (v & 0x200) bits.push('ビットマップのみ埋め込み可');
+  return v + '（' + (bits.join('・') || '不明') + '）';
+}
+
+/* 各テーブルの行データ（[キー, 値] の配列） */
+function rowsHead(dv, t){
+  const o = t.off;
+  return [
+    ['fontRevision', fixed(dv,o+4).toFixed(3)],
+    ['flags', '0x'+dv.getUint16(o+16).toString(16).toUpperCase().padStart(4,'0')],
+    ['unitsPerEm', dv.getUint16(o+18)],
+    ['created', longDateTime(dv,o+20) || '—'],
+    ['modified', longDateTime(dv,o+28) || '—'],
+    ['xMin / yMin', dv.getInt16(o+36)+' / '+dv.getInt16(o+38)],
+    ['xMax / yMax', dv.getInt16(o+40)+' / '+dv.getInt16(o+42)],
+    ['macStyle', '0x'+dv.getUint16(o+44).toString(16).toUpperCase().padStart(4,'0')],
+    ['lowestRecPPEM', dv.getUint16(o+46)],
+    ['indexToLocFormat', dv.getInt16(o+50)],
+  ];
+}
+function rowsHhea(dv, t, v){
+  const o = t.off, p = v ? 'vertTypo' : '';
+  return [
+    [p?'vertTypoAscender':'ascender', dv.getInt16(o+4)],
+    [p?'vertTypoDescender':'descender', dv.getInt16(o+6)],
+    [p?'vertTypoLineGap':'lineGap', dv.getInt16(o+8)],
+    [v?'advanceHeightMax':'advanceWidthMax', dv.getUint16(o+10)],
+    ['caretSlopeRise / Run', dv.getInt16(o+18)+' / '+dv.getInt16(o+20)],
+    [v?'numOfLongVerMetrics':'numberOfHMetrics', dv.getUint16(o+34)],
+  ];
+}
+function rowsMaxp(dv, t){
+  return [['version', fixed(dv,t.off).toFixed(1)], ['numGlyphs', dv.getUint16(t.off+4)]];
+}
+function rowsPost(dv, t){
+  const o = t.off;
+  return [
+    ['version', fixed(dv,o).toFixed(1)],
+    ['italicAngle', fixed(dv,o+4)],
+    ['underlinePosition', dv.getInt16(o+8)],
+    ['underlineThickness', dv.getInt16(o+10)],
+    ['isFixedPitch', dv.getUint32(o+12) ? 'true' : 'false'],
+  ];
+}
+function rowsOS2(dv, t){
+  const o = t.off, ver = dv.getUint16(o);
+  const vend = tag4(dv,o+58).trim();
+  const fsSel = dv.getUint16(o+62);
+  const rows = [
+    ['version', ver],
+    ['xAvgCharWidth', dv.getInt16(o+2)],
+    ['usWeightClass', dv.getUint16(o+4)],
+    ['usWidthClass', dv.getUint16(o+6)],
+    ['fsType', fsTypeLabel(dv.getUint16(o+8))],
+    ['yStrikeoutSize / Position', dv.getInt16(o+26)+' / '+dv.getInt16(o+28)],
+    ['sFamilyClass', dv.getInt16(o+30)],
+    ['panose', [...Array(10)].map((_,i)=>dv.getUint8(o+32+i)).join(' ')],
+    ['achVendID', vend || '—'],
+    ['fsSelection', '0x'+fsSel.toString(16).toUpperCase().padStart(4,'0')
+      + '（'+[fsSel&1?'Italic':null, fsSel&0x20?'Bold':null, fsSel&0x40?'Regular':null,
+              fsSel&0x80?'UseTypoMetrics':null].filter(Boolean).join('・')+'）'],
+    ['usFirstCharIndex', 'U+'+dv.getUint16(o+64).toString(16).toUpperCase().padStart(4,'0')],
+    ['usLastCharIndex', 'U+'+dv.getUint16(o+66).toString(16).toUpperCase().padStart(4,'0')],
+    ['sTypoAscender', dv.getInt16(o+68)],
+    ['sTypoDescender', dv.getInt16(o+70)],
+    ['sTypoLineGap', dv.getInt16(o+72)],
+    ['usWinAscent', dv.getUint16(o+74)],
+    ['usWinDescent', dv.getUint16(o+76)],
+  ];
+  if (ver >= 2 && t.len >= 96){
+    rows.push(['sxHeight', dv.getInt16(o+86)], ['sCapHeight', dv.getInt16(o+88)],
+              ['usMaxContext', dv.getUint16(o+94)]);
+  }
+  return rows;
+}
+function parseNameAll(dv, off){
+  const count = dv.getUint16(off+2), strBase = off + dv.getUint16(off+4);
+  const out = [];
+  for (let i=0;i<count;i++){
+    const r = off+6+i*12;
+    const plat = dv.getUint16(r), enc = dv.getUint16(r+2), lang = dv.getUint16(r+4);
+    const id = dv.getUint16(r+6), len = dv.getUint16(r+8), so = dv.getUint16(r+10);
+    let str = null;
+    try{
+      const bytes = new Uint8Array(dv.buffer, strBase+so, len);
+      if (plat===3 || plat===0) str = td16.decode(bytes);
+      else if (plat===1 && enc===0) str = tdMac.decode(bytes);
+    }catch(e){}
+    if (str !== null) out.push({plat, enc, lang, id, str});
+  }
+  return out;
+}
+function rowsName(dv, t){
+  const recs = parseNameAll(dv, t.off);
+  const CAP = 80;
+  const rows = recs.slice(0, CAP).map(r => [
+    'ID '+r.id + (NAME_ID_LABELS[r.id] ? '（'+NAME_ID_LABELS[r.id]+'）' : '')
+      + ' p'+r.plat+'/l0x'+r.lang.toString(16), r.str || '—',
+  ]);
+  if (recs.length > CAP) rows.push(['…', '他 '+(recs.length-CAP)+' レコード']);
+  return rows;
+}
+function rowsCmap(dv, t){
+  const o = t.off, n = dv.getUint16(o+2);
+  const rows = [['サブテーブル数', n]];
+  for (let i=0;i<n;i++){
+    const p = dv.getUint16(o+4+i*8), e = dv.getUint16(o+6+i*8);
+    const sub = o + dv.getUint32(o+8+i*8);
+    let fmt = '?'; try{ fmt = dv.getUint16(sub); }catch(err){}
+    rows.push(['platform '+p+' / encoding '+e, 'format '+fmt]);
+  }
+  return rows;
+}
+function rowsFvar(f){
+  const rows = [];
+  for (const a of f.axes)
+    rows.push([a.tag+'（'+a.name+'）'+(a.hidden?'※隠し軸':''),
+               'min '+fmtNum(a.min)+' / def '+fmtNum(a.def)+' / max '+fmtNum(a.max)]);
+  rows.push(['名前付きインスタンス', f.instances.length+' 個']);
+  f.instances.slice(0,10).forEach((ins,i)=>rows.push(['  #'+(i+1), ins.name]));
+  if (f.instances.length > 10) rows.push(['…', '他 '+(f.instances.length-10)+' 個']);
+  return rows;
+}
+function rowsOT(dv, t){
+  const o = t.off;
+  const readTags = lo => {
+    const n = dv.getUint16(lo), tags = [];
+    for (let i=0;i<n;i++) tags.push(tag4(dv, lo+2+i*6));
+    return tags;
+  };
+  const scripts = readTags(o + dv.getUint16(o+4));
+  const feats = [...new Set(readTags(o + dv.getUint16(o+6)))];
+  return [
+    ['スクリプト', scripts.join(' ') || '—'],
+    ['機能タグ（'+feats.length+'）', feats.sort().join(' ') || '—'],
+    ['ルックアップ数', dv.getUint16(o + dv.getUint16(o+8))],
+  ];
+}
+function rowsGDEF(dv, t){
+  const o = t.off;
+  const major = dv.getUint16(o), minor = dv.getUint16(o+2);
+  const off16 = p => t.len >= p+2 ? dv.getUint16(o+p) : null;
+  const rows = [
+    ['majorVersion', major],
+    ['minorVersion', minor],
+    ['バージョン表記', major+'.'+minor + (major !== 1 ? '（※通常は 1.0 / 1.2 / 1.3）' : '')],
+    ['glyphClassDefOffset', off16(4) ?? '—'],
+    ['attachListOffset', off16(6) ?? '—'],
+    ['ligCaretListOffset', off16(8) ?? '—'],
+    ['markAttachClassDefOffset', off16(10) ?? '—'],
+  ];
+  if (major === 1 && minor >= 2 && t.len >= 14)
+    rows.push(['markGlyphSetsDefOffset', dv.getUint16(o+12)]);
+  if (major === 1 && minor >= 3 && t.len >= 18)
+    rows.push(['itemVarStoreOffset', dv.getUint32(o+14)]);
+  return rows;
+}
+
+function hexDump(dv, off, len){
+  const max = Math.min(len, 96);
+  const lines = [];
+  for (let i=0;i<max;i+=16){
+    const bytes = [], ascii = [];
+    for (let j=0;j<16 && i+j<max;j++){
+      const b = dv.getUint8(off+i+j);
+      bytes.push(b.toString(16).padStart(2,'0'));
+      ascii.push(b>=0x20 && b<0x7F ? String.fromCharCode(b) : '·');
+    }
+    lines.push(i.toString(16).padStart(4,'0')+'  '+bytes.join(' ').padEnd(47)+'  '+ascii.join(''));
+  }
+  if (len > max) lines.push('… 全 '+len.toLocaleString()+' バイト');
+  return lines.join('\n');
+}
+
+/* 情報タブ */
+function buildInfoTab(f){
+  const dv = new DataView(f.sfntBuf), d = tdir(f);
+  const os2 = d['OS/2'], head = d.head, hhea = d.hhea, vhea = d.vhea, post = d.post;
+  const ver = os2 ? dv.getUint16(os2.off) : -1;
+  const fsSel = os2 ? dv.getUint16(os2.off+62) : 0;
+  const secs = [];
+  secs.push(['一般', [
+    ...[1,2,3,4,5,6,16,17].map(id => [NAME_ID_LABELS[id]+'（ID '+id+'）', f.names[id] || null]),
+  ]]);
+  const nm = id => [NAME_ID_LABELS[id]+'（ID '+id+'）', f.names[id] || null];
+  secs.push(['制作者・ライセンス', [
+    nm(8), nm(11),
+    ['Vendor ID（OS/2 achVendID）', os2 ? tag4(dv,os2.off+58).trim() || null : null],
+    nm(9), nm(12), nm(0), nm(7), nm(13), nm(14),
+    ['fsType（埋め込み許可）', os2 ? fsTypeLabel(dv.getUint16(os2.off+8)) : null],
+  ]]);
+  const met = [
+    ['Units per Em', head ? dv.getUint16(head.off+18) : null],
+    ['Cap Height', os2 && ver>=2 && os2.len>=90 ? dv.getInt16(os2.off+88) : null],
+    ['x Height', os2 && ver>=2 && os2.len>=88 ? dv.getInt16(os2.off+86) : null],
+    ['typo Ascender', os2 ? dv.getInt16(os2.off+68) : null],
+    ['typo Descender', os2 ? dv.getInt16(os2.off+70) : null],
+    ['typo Line Gap', os2 ? dv.getInt16(os2.off+72) : null],
+    ['hhea Ascender', hhea ? dv.getInt16(hhea.off+4) : null],
+    ['hhea Descender', hhea ? dv.getInt16(hhea.off+6) : null],
+    ['hhea Line Gap', hhea ? dv.getInt16(hhea.off+8) : null],
+    ['win Ascent', os2 ? dv.getUint16(os2.off+74) : null],
+    ['win Descent', os2 ? dv.getUint16(os2.off+76) : null],
+    ['Use Typo Metrics', os2 ? String(!!(fsSel & 0x80)) : null],
+  ];
+  if (vhea){
+    met.push(['vhea Ascender（縦）', dv.getInt16(vhea.off+4)],
+             ['vhea Descender（縦）', dv.getInt16(vhea.off+6)],
+             ['vhea Line Gap（縦）', dv.getInt16(vhea.off+8)]);
+  }
+  secs.push(['メトリクス', met]);
+  secs.push(['その他', [
+    ['グリフ数', f.numGlyphs || null],
+    ['Weight Class', os2 ? dv.getUint16(os2.off+4) : null],
+    ['Width Class', os2 ? dv.getUint16(os2.off+6) : null],
+    ['Italic Angle', post ? fixed(dv,post.off+4) : null],
+    ['Underline Position / Thickness', post ? dv.getInt16(post.off+8)+' / '+dv.getInt16(post.off+10) : null],
+    ['Strikeout Position / Size', os2 ? dv.getInt16(os2.off+28)+' / '+dv.getInt16(os2.off+26) : null],
+    ['Italic（fsSelection）', os2 ? String(!!(fsSel&1)) : null],
+    ['Bold（fsSelection）', os2 ? String(!!(fsSel&0x20)) : null],
+    ['Regular（fsSelection）', os2 ? String(!!(fsSel&0x40)) : null],
+    ['作成日', head ? longDateTime(dv,head.off+20) : null],
+    ['更新日', head ? longDateTime(dv,head.off+28) : null],
+    ['バウンディングボックス', head ? '('+dv.getInt16(head.off+36)+', '+dv.getInt16(head.off+38)+') 〜 ('
+      +dv.getInt16(head.off+40)+', '+dv.getInt16(head.off+42)+')' : null],
+  ]]);
+  const root = document.createElement('div');
+  for (const [title, rows] of secs){
+    const sec = document.createElement('section');
+    sec.className = 'kvsec';
+    const h = document.createElement('h3'); h.textContent = title;
+    sec.append(h);
+    for (const [k, v] of rows){
+      const row = document.createElement('div'); row.className = 'kv';
+      const ks = document.createElement('span'); ks.className='k'; ks.textContent = k;
+      const vs = document.createElement('span');
+      const empty = v===null || v===undefined || v==='';
+      const str = empty ? '—' : String(v);
+      vs.className = 'v' + (empty ? ' empty':'');
+      // ライセンス本文など長い値は見出しの下に全幅で表示
+      if (!empty && (str.length > 48 || str.includes('\n'))) row.classList.add('long');
+      // http(s) の URL だけリンクにする（フォント内の文字列なので他スキームは文字のまま）
+      if (!empty && /^https?:\/\/\S+$/i.test(str.trim())){
+        const a = document.createElement('a');
+        a.href = str.trim(); a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = str;
+        vs.append(a);
+      } else vs.textContent = str;
+      row.append(ks, vs);
+      sec.append(row);
+    }
+    root.append(sec);
+  }
+  return root;
+}
+
+/* テーブル仕様ページへのリンク */
+const MS_SPEC_TABLES = new Set(['avar','BASE','CBDT','CBLC','CFF ','CFF2','cmap','COLR','CPAL',
+  'cvar','cvt ','DSIG','EBDT','EBLC','EBSC','fpgm','fvar','gasp','GDEF','glyf','GPOS','GSUB',
+  'gvar','hdmx','head','hhea','hmtx','HVAR','JSTF','kern','loca','LTSH','MATH','maxp','MERG',
+  'meta','MVAR','name','OS/2','PCLT','post','prep','sbix','STAT','SVG ','VDMX','vhea','vmtx',
+  'VORG','VVAR']);
+const AAT_TABLES = new Set(['acnt','ankr','bdat','bloc','bsln','fdsc','feat','fmtx','fond',
+  'gcid','just','kerx','lcar','ltag','mort','morx','opbd','prop','trak','xref','Zapf']);
+function tableSpecUrl(tag){
+  if (MS_SPEC_TABLES.has(tag))
+    return 'https://learn.microsoft.com/ja-jp/typography/opentype/spec/'
+      + tag.trim().toLowerCase().replace('/','');
+  if (AAT_TABLES.has(tag))
+    return 'https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6'
+      + tag.trim() + '.html';
+  return null;
+}
+
+/* テーブルタブ */
+function buildSrcTab(f){
+  const dv = new DataView(f.sfntBuf), d = tdir(f);
+  const root = document.createElement('div');
+  const tags = Object.keys(d).sort((a,b)=>a.toLowerCase()<b.toLowerCase()?-1:1);
+  for (const tag of tags){
+    const t = d[tag];
+    const det = document.createElement('details');
+    det.className = 'tbl';
+    const sum = document.createElement('summary');
+    const tt = document.createElement('span'); tt.className='ttag mono'; tt.textContent = tag;
+    const td = document.createElement('span'); td.className='tdesc'; td.textContent = TABLE_DESC[tag] || '';
+    const tm = document.createElement('span'); tm.className='tmeta mono';
+    tm.textContent = t.len.toLocaleString()+' B';
+    const specUrl = tableSpecUrl(tag);
+    let a;
+    if (specUrl){
+      a = document.createElement('a');
+      a.href = specUrl; a.target = '_blank'; a.rel = 'noopener';
+      a.title = '仕様ページを開く（' + new URL(specUrl).hostname + '）';
+      a.addEventListener('click', e=>e.stopPropagation());
+    } else {
+      // リンクなしでも解説の開始位置を揃えるためのスペーサー
+      a = document.createElement('span');
+      a.style.visibility = 'hidden';
+    }
+    a.className = 'tinfo'; a.textContent = 'ⓘ';
+    sum.append(tt, a, td, tm);
+    det.append(sum);
+    const body = document.createElement('div'); body.className = 'tbody';
+    let rows = null;
+    try{
+      if (tag==='head') rows = rowsHead(dv,t);
+      else if (tag==='hhea') rows = rowsHhea(dv,t,false);
+      else if (tag==='vhea') rows = rowsHhea(dv,t,true);
+      else if (tag==='maxp') rows = rowsMaxp(dv,t);
+      else if (tag==='post') rows = rowsPost(dv,t);
+      else if (tag==='OS/2') rows = rowsOS2(dv,t);
+      else if (tag==='name') rows = rowsName(dv,t);
+      else if (tag==='cmap') rows = rowsCmap(dv,t);
+      else if (tag==='fvar') rows = rowsFvar(f);
+      else if (tag==='GSUB' || tag==='GPOS') rows = rowsOT(dv,t);
+      else if (tag==='GDEF') rows = rowsGDEF(dv,t);
+    }catch(e){ console.error(tag, e); rows = null; }
+    rows = rows ? [['オフセット', '0x'+t.off.toString(16).toUpperCase()], ...rows] : null;
+    if (rows){
+      for (const [k,v] of rows){
+        const row = document.createElement('div'); row.className='kv';
+        const ks = document.createElement('span'); ks.className='k'; ks.textContent=k;
+        const vs = document.createElement('span'); vs.className='v'; vs.textContent=String(v);
+        row.append(ks,vs); body.append(row);
+      }
+    } else {
+      const pre = document.createElement('div'); pre.className='hexdump';
+      pre.textContent = 'オフセット 0x'+t.off.toString(16).toUpperCase()+'（内容の解析は未対応・先頭バイトのみ表示）\n'
+        + hexDump(dv, t.off, t.len);
+      body.append(pre);
+    }
+    det.append(body);
+    root.append(det);
+  }
+  return root;
+}
+
+/* モーダル制御 */
+let modalFontId = null, modalTab = 'info';
+function renderModal(){
+  const f = state.fonts.find(x=>x.id===modalFontId);
+  if (!f) return;
+  $('mTabInfo').classList.toggle('on', modalTab==='info');
+  $('mTabSrc').classList.toggle('on', modalTab==='src');
+  const body = $('modalBody');
+  body.innerHTML = '';
+  body.append(modalTab==='info' ? buildInfoTab(f) : buildSrcTab(f));
+  body.scrollTop = 0;
+}
+function openFontDetail(id){
+  const f = state.fonts.find(x=>x.id===id);
+  if (!f) return;
+  if (!f.sfntBuf){ toast('WOFF2 はテーブルを解析できないため詳細を表示できません'); return; }
+  modalFontId = id; modalTab = 'info';
+  $('modalTitle').textContent = f.displayName;
+  renderModal();
+  $('modalOverlay').classList.add('open');
+  $('modalClose').focus();
+}
+function closeModal(){ $('modalOverlay').classList.remove('open'); }
+$('mTabInfo').addEventListener('click', ()=>{ modalTab='info'; renderModal(); });
+$('mTabSrc').addEventListener('click', ()=>{ modalTab='src'; renderModal(); });
+$('modalClose').addEventListener('click', closeModal);
+$('modalOverlay').addEventListener('click', e=>{ if (e.target === $('modalOverlay')) closeModal(); });
+document.addEventListener('keydown', e=>{
+  if (e.key !== 'Escape') return;
+  if ($('gmOverlay').classList.contains('open')) closeGlyphMetrics();
+  else if ($('modalOverlay').classList.contains('open')) closeModal();
+});
+
+/* 揃え */
+$('alignSeg').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if (!b) return;
+  state.align = b.dataset.a;
+  [...$('alignSeg').children].forEach(x=>x.classList.toggle('on', x===b));
+  applyStyles();
+});
+
+/* テーマ切替 */
+const THEMES = [['','◐ 自動'],['light','○ ライト'],['dark','● ダーク']];
+let themeIdx = 0;
+try{ themeIdx = Math.max(0, THEMES.findIndex(t=>t[0]===(localStorage.getItem('vfc-theme')||''))); }catch(e){}
+function applyTheme(){
+  const [v,label] = THEMES[themeIdx];
+  if (v) document.documentElement.dataset.theme = v;
+  else delete document.documentElement.dataset.theme;
+  $('themeBtn').textContent = label;
+  try{ localStorage.setItem('vfc-theme', v); }catch(e){}
+}
+$('themeBtn').addEventListener('click', ()=>{ themeIdx = (themeIdx+1)%THEMES.length; applyTheme(); });
+applyTheme();
+
+/* ビュー切替 */
+function setView(v){
+  state.view = v;
+  $('tabPreview').classList.toggle('on', v==='preview');
+  $('tabInst').classList.toggle('on', v==='inst');
+  $('tabGlyphs').classList.toggle('on', v==='glyphs');
+  $('stage').style.display = v==='preview' ? 'flex' : 'none';
+  $('controls').style.display = v==='preview' ? 'flex' : 'none';
+  $('instview').style.display = v==='inst' ? 'block' : 'none';
+  $('glyphview').style.display = v==='glyphs' ? 'flex' : 'none';
+  if (v==='inst') renderInstView();
+  if (v==='glyphs') renderGlyphView(true);
+}
+$('tabPreview').addEventListener('click', ()=>setView('preview'));
+$('tabInst').addEventListener('click', ()=>setView('inst'));
+$('tabGlyphs').addEventListener('click', ()=>setView('glyphs'));
+
+/* サイドバーの折りたたみ */
+let collapsedSecs = new Set();
+try{ collapsedSecs = new Set(JSON.parse(localStorage.getItem('vfc-collapsed') || '[]')); }catch(e){}
+for (const sec of document.querySelectorAll('#sidebar .sec')){
+  const btn = sec.querySelector('.sectog');
+  const sync = ()=>{
+    const c = collapsedSecs.has(sec.id);
+    sec.classList.toggle('collapsed', c);
+    btn.setAttribute('aria-expanded', String(!c));
+    btn.title = c ? 'クリックで展開' : 'クリックで折りたたむ';
+  };
+  btn.addEventListener('click', ()=>{
+    if (collapsedSecs.has(sec.id)) collapsedSecs.delete(sec.id); else collapsedSecs.add(sec.id);
+    try{ localStorage.setItem('vfc-collapsed', JSON.stringify([...collapsedSecs])); }catch(e){}
+    sync();
+  });
+  sync();
+}
+
+/* ファイル入力 */
+$('drop').addEventListener('click', ()=>$('filein').click());
+$('drop').addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();$('filein').click();} });
+$('filein').addEventListener('change', e=>{ handleFiles(e.target.files); e.target.value=''; });
+for (const el of [document.body]){
+  el.addEventListener('dragover', e=>{ e.preventDefault(); $('drop').classList.add('over'); });
+  el.addEventListener('dragleave', e=>{ if (e.target===document.body) $('drop').classList.remove('over'); });
+  el.addEventListener('drop', e=>{
+    e.preventDefault(); $('drop').classList.remove('over');
+    if (e.dataTransfer && e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+  });
+}
+
+let toastTimer = null;
+function toast(msg){
+  const t = $('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 4200);
+}
+
+/* 初期化 */
+renderSampleSel('b:yakumono');
+$('pvMain').textContent = state.text;
+applyStyles();
+renderFontList();
+favLoadList();
+</script>
