@@ -142,13 +142,19 @@ header .spacer{flex:1}
 #secMix h2 .chk{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:400;font-size:11px}
 .mixbase{font-size:11px;color:var(--muted);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mixbase b{color:var(--text);font-weight:600}
-.mixrow{display:flex;align-items:center;gap:6px;padding:3px 0}
+.mixrow{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;padding:4px 0;border-bottom:1px solid var(--border)}
+.mixrow .mixnums{flex-basis:100%;display:flex;align-items:center;gap:6px;padding-left:70px}
+.mixrow .nk{color:var(--muted);font-size:10.5px;flex:none}
+.mixrow .nk:not(:first-child){margin-left:6px}
 .mixrow .mk{width:64px;flex:none;font-size:11.5px;cursor:help}
-.mixrow select{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:2px 4px;font-size:11.5px}
+.mixrow select{flex:1 1 0;min-width:0;background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:2px 4px;font-size:11.5px}
 .mixrow input{width:46px;flex:none;text-align:right;background:var(--panel2);border:1px solid var(--border);border-radius:4px;padding:1px 4px;font-size:11px}
 .mixrow .pct{color:var(--muted);font-size:10px;flex:none}
 .mixrow.set .mk{font-weight:700}
+/* 混植のベースラインシフト: 文字種ごとの span を行の上側へずらす（行送り・字送りは変えない） */
+.bshift{position:relative}
 .mixtools{display:flex;gap:6px;align-items:center;margin-top:6px}
+.mixopt{margin-top:8px;font-size:11.5px}
 
 /* axes */
 .axis{margin-bottom:10px}
@@ -157,9 +163,12 @@ header .spacer{flex:1}
 .axis .axname{color:var(--muted);font-size:11px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .axis .axval{width:64px;text-align:right;background:var(--panel2);border:1px solid var(--border);
   border-radius:4px;padding:1px 5px;font-size:11px}
-.axis .axplay{color:var(--muted);font-size:11px;width:20px;text-align:center;border-radius:4px}
+.axis .axplay{color:var(--muted);font-size:11px;min-width:30px;text-align:center;border-radius:4px;white-space:nowrap}
 .axis .axplay:hover{color:var(--accent)}
-.axis .axplay.on{color:var(--accent)}
+.axis .axplay.on{color:var(--accent);font-weight:700}
+.axis .axstop{color:var(--muted);font-size:10px;width:18px;text-align:center;border-radius:4px}
+.axis .axstop:not(:disabled):hover{color:var(--accent)}
+.axis .axstop:disabled{opacity:.3;cursor:default}
 .axis input[type=range]{width:100%;accent-color:var(--accent);margin:4px 0 0}
 .axis .axrange{display:flex;justify-content:space-between;color:var(--muted);font-size:9.5px}
 .axtools{display:flex;gap:6px;margin-bottom:10px}
@@ -170,7 +179,7 @@ header .spacer{flex:1}
 /* features */
 .feat{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);min-height:30px}
 .feat:last-child{border-bottom:none}
-.feat .ftag{font-weight:400;font-size:11.5px;width:44px;flex:none;color:var(--muted)}
+.feat .ftag{font-weight:400;font-size:11.5px;width:30px;flex:none;color:var(--muted)}
 .feat .fdesc{flex:1;min-width:0;font-size:11px;color:var(--muted);line-height:1.35}
 .feat.jpf .ftag{color:var(--text);font-weight:700}
 .tri{display:flex;flex:none;border:1px solid var(--border);border-radius:5px;overflow:hidden}
@@ -237,11 +246,23 @@ header .spacer{flex:1}
   font-kerning:none; /* 機能は font-feature-settings 側で明示制御 */
 }
 .pane.v .previewtext{writing-mode:vertical-rl}
+/* 1em グリッド: 1em 角の升目をタイルとして敷き詰める（線はタイルの左辺・上辺）。
+   local で本文と一緒にスクロールさせ、スクロール量に関係なく升目と字がずれないようにする */
 .previewtext.grid{
   background-image:
-    repeating-linear-gradient(to right, var(--grid) 0 1px, transparent 1px var(--gsz,40px)),
-    repeating-linear-gradient(to bottom, var(--grid) 0 1px, transparent 1px var(--gsz,40px));
+    linear-gradient(to right, var(--grid) 0 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid) 0 1px, transparent 1px);
+  background-size:var(--gsz,40px) var(--gsz,40px);
   background-origin:content-box;background-clip:content-box;
+  background-attachment:local;
+}
+/* 縦組み（vertical-rl）は行が右端から始まるので、升目も右端を基準に敷く（線はタイルの右辺）。
+   左端基準のままだと、領域の幅が 1em の倍数でないときに全体がずれる */
+.pane.v .previewtext.grid{
+  background-image:
+    linear-gradient(to left, var(--grid) 0 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid) 0 1px, transparent 1px);
+  background-position:right top;
 }
 #empty{
   position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -444,7 +465,8 @@ input[type=file]{display:none}
         <span class="sep" aria-hidden="true">|</span>
         <a href="https://github.com/toktaro/Fontmiru" target="_blank" rel="noopener">GitHub</a>
       </p>
-      <p><span class="appname">Fontmiru</span> Beta — フォント検証ツール</p>
+      <!-- バージョン表記 = 機能を追加・変更した年月（YYYYMM）。更新したら CHANGELOG.md と合わせて書き換える -->
+      <p><span class="appname">Fontmiru</span> Beta (202611) — フォント検証ツール</p>
       <p>© 2026– toktaro　Released under the <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a></p>
     </footer>
   </aside>
@@ -501,7 +523,8 @@ input[type=file]{display:none}
           <button class="btn" id="sampleCancel">✕</button>
         </div>
       </div>
-      <label class="chk"><input type="checkbox" id="gridChk">1em グリッド</label>
+      <label class="chk" title="横組みでは palt を ON・vpal を OFF、縦組みでは vpal を ON・palt を OFF に自動で切り替えます"><input type="checkbox" id="propChk">プロポーショナル</label>
+      <label class="chk" title="ON にすると行送り 1.00・字送り 0 に揃えます（OFF で元の値に戻ります）"><input type="checkbox" id="gridChk">1em グリッド</label>
       <label class="chk"><input type="checkbox" id="cmpChk">既定と比較</label>
     </div>
 
@@ -607,6 +630,27 @@ const FEAT_DESC = {
 };
 for (let i=1;i<=20;i++) FEAT_DESC['ss'+String(i).padStart(2,'0')] = 'スタイリスティックセット '+i;
 for (let i=1;i<=99;i++) FEAT_DESC['cv'+String(i).padStart(2,'0')] = '字形バリエーション '+i;
+
+/* 登録済み機能タグ → Microsoft OpenType 仕様の解説ページ（頭文字ごとの 5 ページ）と見出しアンカー
+   アンカーは '#tag-' + 下記の文字列（ja-jp / en-us 共通）。ss01–ss20・cv01–cv99 は範囲で 1 見出し */
+const FEAT_SPEC_ANCHORS = {
+  features_ae: 'aalt abvf abvm abvs afrc akhn apkn blwf blwm blws calt case ccmp cfar chws cjct clig cpct cpsp cswh curs cv01--cv99 c2pc c2sc dist dlig dnom dtls expt',
+  features_fj: 'falt fin2 fin3 fina flac frac fwid half haln halt hist hkna hlig hngl-deprecated hojo hwid init isol ital jalt jp78 jp83 jp90 jp04',
+  features_ko: 'kern lfbd liga ljmo lnum locl ltra ltrm mark med2 medi mgrk mkmk mset nalt nlck nukt numr onum opbd-deprecated ordn ornm',
+  features_pt: 'palt pcap pkna pnum pref pres pstf psts pwid qwid rand rclt rkrf rlig rphf rtbd rtla rtlm ruby rvrn salt sinf size smcp smpl ss01---ss20 ssty stch subs sups swsh titl tjmo tnam tnum trad twid',
+  features_uz: 'unic valt vapk vatu vchw vert vhal vjmo vkna vkrn vpal vrt2 vrtr zero',
+};
+const FEAT_SPEC = {}; // タグ → 'features_xx#tag-…'
+for (const [page, list] of Object.entries(FEAT_SPEC_ANCHORS)){
+  for (const id of list.split(' ')){
+    const range = id.match(/^(ss|cv)01-+\1(\d\d)$/);
+    if (range) for (let i=1;i<=+range[2];i++) FEAT_SPEC[range[1]+String(i).padStart(2,'0')] = page+'#tag-'+id;
+    else FEAT_SPEC[id.slice(0,4)] = page+'#tag-'+id;
+  }
+}
+function featureSpecUrl(tag){
+  return FEAT_SPEC[tag] ? 'https://learn.microsoft.com/ja-jp/typography/opentype/spec/' + FEAT_SPEC[tag] : null;
+}
 
 /* =============== バイナリ解析 =============== */
 const td16 = new TextDecoder('utf-16be'), tdMac = new TextDecoder('macintosh'), td8 = new TextDecoder();
@@ -845,8 +889,9 @@ const state = {
   size: 36, lh: 1.35, ls: 0, align: 'start',
   vertical: false, orient: 'mixed',
   grid: false, compare: false, view: 'preview',
+  prop: false, // プロポーショナル: 組み方向に合わせて palt / vpal を自動で切り替える
   anim: {}, // tag -> {t0, raf有無はグローバル}
-  mix: { on: false, rules: {} }, // 混植: 文字種キー -> {id: フォント ID|null(=ベース), scale: %}
+  mix: { on: false, rules: {}, center: false }, // 混植: 文字種キー -> {id: フォント ID|null(=ベース), scale: %, shift: %}。center = 文字中心で拡大・縮小
 };
 
 function analyzeSfnt(buf, base, fileName){
@@ -953,7 +998,7 @@ const active = () => state.fonts.find(f => f.id === state.activeId) || null;
 function selectFont(id){
   state.activeId = id;
   const f = active();
-  state.axisValues = {}; state.features = {}; stopAllAnims();
+  state.axisValues = {}; state.features = {}; stopAllAnims(); applyProp();
   if (f) for (const a of f.axes) state.axisValues[a.tag] = a.def;
   renderFontList(); renderAxes(); renderFeatures(); renderInfo();
   applyStyles(); renderInstView(); renderGlyphView(true);
@@ -1033,7 +1078,8 @@ function renderAxes(){
       <div class="axhead">
         <span class="axtag mono">${a.tag}</span>
         <span class="axname" title="${a.name.replace(/"/g,'&quot;')}">${a.name.replace(/</g,'&lt;')}</span>
-        <button class="axplay mono" title="この軸をアニメーション" aria-label="${a.tag} 軸をアニメーション">▶</button>
+        <button class="axplay mono">▶</button>
+        <button class="axstop" title="アニメーションを停止" aria-label="${a.tag} 軸のアニメーションを停止">■</button>
         <input class="axval mono" type="text" inputmode="decimal" value="${fmtNum(state.axisValues[a.tag])}" aria-label="${a.tag} の値">
       </div>
       <input type="range" min="${a.min}" max="${a.max}" step="${step}" value="${state.axisValues[a.tag]}" aria-label="${a.tag} スライダー">
@@ -1048,6 +1094,8 @@ function renderAxes(){
       num.value = fmtNum(state.axisValues[a.tag]); range.value = state.axisValues[a.tag];
     });
     play.addEventListener('click', ()=>toggleAnim(a.tag));
+    row.querySelector('.axstop').addEventListener('click', ()=>stopAnim(a.tag));
+    syncAnimBtn(row, a.tag);
     row.dataset.tag = a.tag;
     wrap.append(row);
   }
@@ -1066,18 +1114,43 @@ function syncAxisUI(){
     const tag = row.dataset.tag;
     row.querySelector('input[type=range]').value = state.axisValues[tag];
     row.querySelector('.axval').value = fmtNum(state.axisValues[tag]);
-    row.querySelector('.axplay').classList.toggle('on', !!state.anim[tag]);
-    row.querySelector('.axplay').textContent = state.anim[tag] ? '■' : '▶';
+    syncAnimBtn(row, tag);
   }
 }
 
-/* 軸アニメーション */
+/* 軸アニメーション: ▶ を押すごとに 1× → 2× → 3× → 0.5× → 1× … と速度が循環、■ で停止 */
+const ANIM_SPEEDS = [1, 2, 3, 0.5];
+const ANIM_PERIOD = 3000; // 1× の往復周期（ms）
+const speedLabel = sp => sp + '×';
 let rafId = null;
+function syncAnimBtn(row, tag){
+  const btn = row.querySelector('.axplay'), stop = row.querySelector('.axstop');
+  const an = state.anim[tag];
+  btn.classList.toggle('on', !!an);
+  btn.textContent = an ? speedLabel(ANIM_SPEEDS[an.i]) : '▶';
+  const next = speedLabel(ANIM_SPEEDS[an ? (an.i+1) % ANIM_SPEEDS.length : 0]);
+  btn.title = (an ? 'アニメーション中（' + speedLabel(ANIM_SPEEDS[an.i]) + '）— クリックで ' + next + ' に変更'
+                  : 'この軸をアニメーション（' + next + ' で再生）')
+    + '\n速度は ' + ANIM_SPEEDS.map(speedLabel).join(' → ') + ' の順に切り替わります（■ で停止）';
+  btn.setAttribute('aria-label', tag + ' 軸のアニメーション: ' + (an ? speedLabel(ANIM_SPEEDS[an.i]) : '停止中')
+    + '。クリックで ' + next + (an ? ' に変更' : ' で再生'));
+  stop.disabled = !an;
+}
 function toggleAnim(tag){
-  if (state.anim[tag]) delete state.anim[tag];
-  else state.anim[tag] = { t0: performance.now(), from: state.axisValues[tag] };
+  const f = active(); if (!f) return;
+  const a = f.axes.find(x=>x.tag===tag); if (!a) return;
+  const an = state.anim[tag];
+  if (!an){
+    // 現在値から滑らかに動き出すよう、値に対応する位相から始める
+    const x = (state.axisValues[tag] - a.min)/((a.max-a.min)||1)*2-1;
+    state.anim[tag] = { i: 0, phase: Math.acos(Math.min(1, Math.max(-1, x))), last: performance.now() };
+  } else an.i = (an.i + 1) % ANIM_SPEEDS.length; // 位相は引き継ぐので速度だけが変わる
   syncAxisUI();
   if (Object.keys(state.anim).length && !rafId) rafId = requestAnimationFrame(animTick);
+}
+function stopAnim(tag){
+  delete state.anim[tag]; // 値はその位置で止まる
+  syncAxisUI();
 }
 function stopAllAnims(){ state.anim = {}; if (rafId){ cancelAnimationFrame(rafId); rafId = null; } }
 function animTick(now){
@@ -1085,9 +1158,10 @@ function animTick(now){
   if (!f || !Object.keys(state.anim).length){ rafId = null; return; }
   for (const tag in state.anim){
     const a = f.axes.find(x=>x.tag===tag); if (!a) continue;
-    const t = (now - state.anim[tag].t0) / 3000; // 周期 3 秒
-    const phase = Math.acos(Math.min(1, Math.max(-1, (state.anim[tag].from - a.min)/((a.max-a.min)||1)*2-1)));
-    state.axisValues[tag] = a.min + (a.max-a.min) * (0.5 + 0.5*Math.cos(t*Math.PI*2 + phase));
+    const an = state.anim[tag];
+    an.phase += Math.max(0, now - an.last) / ANIM_PERIOD * ANIM_SPEEDS[an.i] * Math.PI*2;
+    an.last = now;
+    state.axisValues[tag] = a.min + (a.max-a.min) * (0.5 + 0.5*Math.cos(an.phase));
   }
   syncAxisUI(); applyStyles();
   rafId = requestAnimationFrame(animTick);
@@ -1130,6 +1204,9 @@ function renderFeatures(){
     const kind = [f.gsub.has(t)?'GSUB':null, f.gpos.has(t)?'GPOS':null].filter(Boolean).join('+');
     row.innerHTML = `
       <span class="ftag mono">${t}</span>
+      ${featureSpecUrl(t)
+        ? `<a class="tinfo" href="${featureSpecUrl(t)}" target="_blank" rel="noopener" title="${t} の仕様ページを開く（learn.microsoft.com）" aria-label="${t} の仕様ページを開く">ⓘ</a>`
+        : '<span class="tinfo" style="visibility:hidden" aria-hidden="true">ⓘ</span>' /* 未登録タグ: 解説の開始位置を揃えるスペーサー */}
       <span class="fdesc" title="${kind}">${FEAT_DESC[t] || kind}</span>
       <div class="tri" role="group" aria-label="${t}">
         <button data-v="">既定</button><button data-v="1">ON</button><button data-v="0">OFF</button>
@@ -1142,11 +1219,22 @@ function renderFeatures(){
     btns.forEach(b=>b.addEventListener('click', ()=>{
       if (b.dataset.v === '') delete state.features[t];
       else state.features[t] = +b.dataset.v;
+      // palt / vpal を手動で変えたら、プロポーショナルの自動切り替えは解除する
+      if (state.prop && (t === 'palt' || t === 'vpal')){
+        state.prop = false; $('propChk').checked = false;
+        toast('palt / vpal を手動で変更したため、プロポーショナルの自動切り替えを解除しました');
+      }
       sync(); applyStyles();
     }));
     sync();
     wrap.append(row);
   }
+}
+/* プロポーショナル: 横組み = palt ON・vpal OFF、縦組み = vpal ON・palt OFF */
+function applyProp(){
+  if (!state.prop) return;
+  state.features.palt = state.vertical ? 0 : 1;
+  state.features.vpal = state.vertical ? 1 : 0;
 }
 function JP_ORDER_IDX(t){ const i = JP_FEATURES.indexOf(t); return i<0 ? 999 : i; }
 
@@ -1195,7 +1283,7 @@ const MIX_CLASSES = [
   {k:'latin', label:'欧文', range:'U+0020-002F, U+003A-007E, U+00A0-024F, U+1E00-1EFF', note:'半角の欧文字・記号・スペース（数字を除く）'},
   {k:'digit', label:'数字', range:'U+0030-0039', note:'半角数字 0–9'},
 ];
-for (const c of MIX_CLASSES) state.mix.rules[c.k] = {id: null, scale: 100};
+for (const c of MIX_CLASSES) state.mix.rules[c.k] = {id: null, scale: 100, shift: 0};
 const SIZE_ADJUST_OK = (()=>{ try{ return 'sizeAdjust' in FontFace.prototype; }catch(e){ return false; } })();
 let mixSeq = 0, mixFaces = [], mixFamily = null;
 
@@ -1216,8 +1304,135 @@ function mixSpecs(){
 }
 function mixSummary(){
   const base = active();
-  return mixSpecs().map(({c,f,scale}) =>
-    c.label+'='+(f===base ? 'ベース' : f.displayName)+(scale!==100 ? ' '+scale+'%' : '')).join('、');
+  if (!state.mix.on || !base) return '';
+  const parts = [];
+  for (const c of MIX_CLASSES){
+    const r = state.mix.rules[c.k];
+    const f = (r.id && state.fonts.find(x=>x.id===r.id)) || base;
+    const scale = SIZE_ADJUST_OK ? r.scale : 100;
+    if (f === base && scale === 100 && !r.shift) continue;
+    parts.push(c.label+'='+(f===base ? 'ベース' : f.displayName)+(scale!==100 ? ' '+scale+'%' : '')
+      + (r.shift ? ' シフト'+(r.shift>0?'+':'')+r.shift+'%' : ''));
+  }
+  const scaled = SIZE_ADJUST_OK && MIX_CLASSES.some(c=>state.mix.rules[c.k].scale !== 100);
+  return parts.join('、') + (parts.length && state.mix.center && scaled ? '（文字中心で拡大・縮小）' : '');
+}
+
+/* ---- ベースラインシフト（文字種ごと） ----
+   unicode-range ではフォントごとに字を上下できないため、プレビューの文字を文字種ごとの span で包み、
+   position:relative で行の上側へずらす（横組み = 上、縦組み = 右。行送り・字送り・グリッドには影響しない） */
+const MIX_RANGES = MIX_CLASSES.map(c => ({k: c.k, r: c.range.split(',').map(x=>{
+  const m = x.trim().match(/^U\+([0-9A-F]+)(?:-([0-9A-F]+))?$/i);
+  return [parseInt(m[1],16), parseInt(m[2]||m[1],16)];
+})}));
+function mixClassOf(cp){
+  for (const {k, r} of MIX_RANGES) for (const [a, b] of r) if (cp >= a && cp <= b) return k;
+  return null;
+}
+function cpSet(f){ // フォントの収録字（cmap）。解析できない WOFF2 は null = 判定しない
+  if (f._cpSet === undefined){ const d = ensureGlyphData(f); f._cpSet = d ? new Set(d.map(g=>g.cp)) : null; }
+  return f._cpSet;
+}
+/* 文字種キー → {shift: %, cover: 差し替え先の収録字}。シフト 0 の文字種は含めない */
+/* フォントの仮想ボディ（em ボックス）の中心がベースラインから何 em 上にあるか。
+   OS/2 の typoAscender / typoDescender の中間（和文フォントでは通常 0.38 前後）。解析できなければ 0.38 */
+function emCenter(f){
+  if (f._emCenter === undefined){
+    f._emCenter = 0.38;
+    try{
+      const d = tdir(f), os2 = d && d['OS/2'];
+      if (os2 && f.upm){
+        const dv = new DataView(f.sfntBuf);
+        f._emCenter = (dv.getInt16(os2.off+68) + dv.getInt16(os2.off+70)) / 2 / f.upm;
+      }
+    }catch(e){}
+  }
+  return f._emCenter;
+}
+/* 文字種キー → {shift: %, cover: 差し替え先の収録字}。ずらさない文字種は含めない。
+   「文字中心で拡大・縮小」が ON のときは、size-adjust がベースライン基準で縮める（横組みは下・縦組みは左に寄る）分を、
+   (1 − 比率) × 仮想ボディ中心の高さ だけ行の上側へ戻して、字面の中心を保つ */
+function mixShifts(){
+  const base = active(), out = {};
+  if (!state.mix.on || !base) return out;
+  for (const c of MIX_CLASSES){
+    const r = state.mix.rules[c.k];
+    const f = (r.id && state.fonts.find(x=>x.id===r.id)) || base;
+    let shift = r.shift;
+    if (state.mix.center && SIZE_ADJUST_OK && r.scale !== 100) shift += (1 - r.scale/100) * emCenter(f) * 100;
+    shift = Math.round(shift*100)/100;
+    if (!shift) continue;
+    // 差し替え先に無い字はベースで表示されるので、その字はずらさない
+    out[c.k] = {shift, cover: f === base ? null : cpSet(f)};
+  }
+  return out;
+}
+const COMBINING = /[\p{M}\u200D]/u; // 異体字セレクタ・結合文字は直前の字と同じ span に入れる（IVS が崩れないように）
+function fillShifted(el, text, shifts){
+  if (!Object.keys(shifts).length){ el.textContent = text; return; }
+  const frag = document.createDocumentFragment();
+  let run = '', runShift = 0;
+  const flush = ()=>{
+    if (!run) return;
+    if (runShift){
+      const sp = document.createElement('span');
+      sp.className = 'bshift';
+      sp.style.insetBlockStart = (-runShift/100)+'em';
+      sp.textContent = run;
+      frag.append(sp);
+    } else frag.append(run);
+    run = '';
+  };
+  for (const ch of text){
+    let v = runShift;
+    if (!COMBINING.test(ch)){
+      const cp = ch.codePointAt(0), k = mixClassOf(cp), sh = k && shifts[k];
+      v = sh && (!sh.cover || sh.cover.has(cp)) ? sh.shift : 0;
+    }
+    if (v !== runShift){ flush(); runShift = v; }
+    run += ch;
+  }
+  flush();
+  el.replaceChildren(frag);
+}
+/* 編集中のプレビューを組み直すときのカーソル位置（プレーンテキスト上の文字数）の保存・復元 */
+function caretOffset(root){
+  const sel = getSelection();
+  if (!sel.rangeCount || !root.contains(sel.anchorNode)) return null;
+  const target = sel.anchorNode, toff = sel.anchorOffset;
+  let n = 0, done = false;
+  const walk = node => {
+    if (node === target && node.nodeType === 3){ n += toff; done = true; return; }
+    if (node.nodeType === 3){ n += node.length; return; }
+    if (node.nodeName === 'BR'){ n += 1; return; }
+    const kids = node.childNodes;
+    for (let i=0; i<kids.length; i++){
+      if (node === target && i === toff){ done = true; return; }
+      walk(kids[i]); if (done) return;
+    }
+    if (node === target) done = true;
+  };
+  walk(root);
+  return n;
+}
+function setCaret(root, off){
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const r = document.createRange();
+  let node, rem = off, placed = false;
+  while ((node = w.nextNode())){
+    if (rem <= node.length){ r.setStart(node, rem); placed = true; break; }
+    rem -= node.length;
+  }
+  if (!placed){ r.selectNodeContents(root); r.collapse(false); } else r.collapse(true);
+  const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+}
+/* プレビュー（と比較欄）の本文を、現在のシフト設定で描き直す */
+function renderPreviewText(){
+  const shifts = mixShifts(), pv = $('pvMain');
+  const off = document.activeElement === pv ? caretOffset(pv) : null;
+  fillShifted(pv, state.text, shifts);
+  if (off !== null) setCaret(pv, off);
+  if (state.compare) fillShifted($('pvBase'), state.text, shifts);
 }
 
 async function rebuildMix(){
@@ -1235,7 +1450,7 @@ async function rebuildMix(){
   for (const ff of faces) document.fonts.add(ff);
   mixFaces = faces;
   mixFamily = faces.length ? fam : null;
-  applyStyles(); renderInstView();
+  renderPreviewText(); applyStyles(); renderInstView();
 }
 
 function renderMixUI(){
@@ -1275,30 +1490,50 @@ function renderMixUI(){
       rebuildMix();
     });
     row.append(k, sel);
-    if (SIZE_ADJUST_OK){
+    const nums = document.createElement('div'); nums.className = 'mixnums';
+    const addNum = (label, title, aria, val, min, max, step, onSet)=>{
+      const nk = document.createElement('span'); nk.className = 'nk'; nk.textContent = label; nk.title = title;
       const num = document.createElement('input');
-      num.type = 'number'; num.min = 50; num.max = 150; num.step = 1; num.value = r.scale;
-      num.className = 'mono';
-      num.title = 'サイズ比率（CSS size-adjust）。ベースラインを基準に拡大縮小されます';
-      num.setAttribute('aria-label', c.label+' のサイズ比率（%）');
-      num.addEventListener('change', ()=>{
-        const v = Math.round(parseFloat(num.value));
-        r.scale = isNaN(v) ? 100 : Math.min(150, Math.max(50, v));
-        num.value = r.scale;
-        rebuildMix();
-      });
+      num.type = 'number'; num.min = min; num.max = max; num.step = step; num.value = val;
+      num.className = 'mono'; num.title = title;
+      num.setAttribute('aria-label', aria);
+      num.addEventListener('change', ()=>{ num.value = onSet(parseFloat(num.value)); });
       const pct = document.createElement('span'); pct.className = 'pct'; pct.textContent = '%';
-      row.append(num, pct);
-    }
+      nums.append(nk, num, pct);
+    };
+    if (SIZE_ADJUST_OK) addNum('比率', 'サイズ比率（CSS size-adjust）。ベースラインを基準に拡大・縮小します（下の「文字中心で拡大・縮小」を ON にすると字面の中心が基準）',
+      c.label+' のサイズ比率（%）', r.scale, 50, 150, 1, v=>{
+        r.scale = isNaN(v) ? 100 : Math.min(150, Math.max(50, Math.round(v)));
+        rebuildMix();
+        return r.scale;
+      });
+    addNum('シフト', 'ベースラインシフト（1em に対する %）。正の値で上へ（縦組みでは右へ）ずらします。行送り・字送りは変わりません',
+      c.label+' のベースラインシフト（%）', r.shift, -50, 50, 0.5, v=>{
+        r.shift = isNaN(v) ? 0 : Math.min(50, Math.max(-50, Math.round(v*10)/10));
+        renderPreviewText(); applyStyles(); renderInstView();
+        return r.shift;
+      });
+    row.append(nums);
     body.append(row);
   }
   const tools = document.createElement('div'); tools.className = 'mixtools';
   const reset = document.createElement('button'); reset.className = 'btn'; reset.textContent = '割り当てをリセット';
   reset.addEventListener('click', ()=>{
-    for (const c of MIX_CLASSES) state.mix.rules[c.k] = {id: null, scale: 100};
+    for (const c of MIX_CLASSES) state.mix.rules[c.k] = {id: null, scale: 100, shift: 0};
     renderMixUI(); rebuildMix();
   });
   tools.append(reset);
+  if (SIZE_ADJUST_OK){
+    const opt = document.createElement('label'); opt.className = 'chk mixopt';
+    opt.title = 'ON: 比率を変えた字を、仮想ボディの中心を基準に拡大・縮小します（Illustrator の「文字中心で拡大・縮小」相当）\nOFF: ベースラインを基準に拡大・縮小します（縮めると横組みでは下、縦組みでは左に寄る）';
+    const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = state.mix.center;
+    cb.addEventListener('change', ()=>{
+      state.mix.center = cb.checked;
+      renderPreviewText(); applyStyles(); renderInstView();
+    });
+    opt.append(cb, document.createTextNode('文字中心で拡大・縮小'));
+    body.append(opt);
+  }
   if (state.fonts.length < 2){
     const p = document.createElement('p'); p.className = 'hint';
     p.textContent = 'フォントを 2 つ以上読み込むと、文字種ごとに別のフォントを当てられます。';
@@ -1483,7 +1718,7 @@ function applyStyles(){
   $('paneBase').classList.toggle('v', state.vertical);
   const parts = [];
   if (Object.keys(state.features).length) parts.push(featSettings());
-  const mix = mixFamily ? mixSummary() : '';
+  const mix = mixSummary();
   $('labelMain').textContent = '現在の設定' + (parts.length ? ' — '+parts.join(' ') : '（機能指定なし）')
     + (mix ? ' ／ 混植: '+mix : '');
 }
@@ -1499,6 +1734,7 @@ function renderInstView(rebuild = true){
     : [{name:'（名前付きインスタンスなし — 現在の軸値）', coords: state.axisValues}];
   if (rebuild || el.childElementCount !== items.length){
     el.innerHTML = '';
+    const shifts = mixShifts();
     for (const ins of items){
       const row = document.createElement('div');
       row.className = 'instrow';
@@ -1507,7 +1743,7 @@ function renderInstView(rebuild = true){
         <div class="isample"></div>`;
       row.querySelector('.iname').textContent = ins.name;
       const s = row.querySelector('.isample');
-      s.textContent = sample;
+      fillShifted(s, sample, shifts);
       s.style.fontFamily = previewStack();
       s.style.fontSize = Math.min(state.size, 48)+'px';
       s.style.fontVariationSettings = Object.entries(ins.coords).map(([t,v])=>`"${t}" ${v}`).join(', ') || 'normal';
@@ -1523,11 +1759,12 @@ $('dirSeg').addEventListener('click', e=>{
   state.vertical = b.dataset.dir === 'v';
   [...$('dirSeg').children].forEach(x=>x.classList.toggle('on', x===b));
   $('orientCtl').hidden = !state.vertical;
+  if (state.prop){ applyProp(); renderFeatures(); }
   applyStyles();
 });
 $('orientSel').addEventListener('change', e=>{ state.orient = e.target.value; applyStyles(); });
 /* サイズ・行送り・字送り: スライダー＋数値入力（数値はスライダー範囲外も入力可） */
-function bindSliderNum(rangeId, numId, o){
+function bindSliderNum(rangeId, numId, o){ // 戻り値は UI を状態に合わせ直す関数
   const range = $(rangeId), num = $(numId);
   const sync = ()=>{ range.value = o.toRange(o.get()); num.value = o.fmt(o.get()); };
   range.addEventListener('input', ()=>{ o.set(o.fromRange(+range.value)); num.value = o.fmt(o.get()); applyStyles(); o.after && o.after(); });
@@ -1537,27 +1774,46 @@ function bindSliderNum(rangeId, numId, o){
     sync();
   });
   sync();
+  return sync;
 }
 bindSliderNum('sizeRange', 'sizeNum', {
   get: ()=>state.size, set: v=>{ state.size = Math.round(v*10)/10; },
   toRange: v=>v, fromRange: v=>v, fmt: v=>fmtNum(v), min: 4, max: 600,
   after: ()=>renderInstView(false),
 });
-bindSliderNum('lhRange', 'lhNum', {
+const syncLh = bindSliderNum('lhRange', 'lhNum', {
   get: ()=>state.lh, set: v=>{ state.lh = Math.round(v*100)/100; },
   toRange: v=>Math.round(v*100), fromRange: v=>v/100, fmt: v=>v.toFixed(2), min: 0.5, max: 5,
 });
-bindSliderNum('lsRange', 'lsNum', { // state.ls は 1/100 em 単位、入力欄は em
+const syncLs = bindSliderNum('lsRange', 'lsNum', { // state.ls は 1/100 em 単位、入力欄は em
   get: ()=>state.ls/100, set: v=>{ state.ls = Math.round(v*1000)/10; },
   toRange: v=>Math.round(v*100), fromRange: v=>v/100, fmt: v=>v ? fmtNum2(v) : '0', min: -1, max: 2,
 });
 function fmtNum2(v){ return String(Math.round(v*1000)/1000); }
-$('gridChk').addEventListener('change', e=>{ state.grid = e.target.checked; applyStyles(); });
+let gridSaved = null; // グリッド ON 前の行送り・字送り
+$('gridChk').addEventListener('change', e=>{
+  state.grid = e.target.checked;
+  if (state.grid){
+    gridSaved = {lh: state.lh, ls: state.ls};
+    state.lh = 1; state.ls = 0; // 升目と行・字の送りを一致させる
+  } else if (gridSaved){
+    // グリッド中に手で変えていなければ、ON にする前の値に戻す
+    if (state.lh === 1 && state.ls === 0){ state.lh = gridSaved.lh; state.ls = gridSaved.ls; }
+    gridSaved = null;
+  }
+  syncLh(); syncLs(); applyStyles();
+});
+$('propChk').addEventListener('change', e=>{
+  state.prop = e.target.checked;
+  if (state.prop) applyProp();
+  else { delete state.features.palt; delete state.features.vpal; }
+  renderFeatures(); applyStyles();
+});
 $('cmpChk').addEventListener('change', e=>{
   state.compare = e.target.checked;
   $('paneBase').hidden = !state.compare;
   $('stage').classList.toggle('compare', state.compare);
-  if (state.compare) $('pvBase').textContent = state.text;
+  if (state.compare) fillShifted($('pvBase'), state.text, mixShifts());
 });
 /* サンプルテキスト管理（プリセット + マイサンプル / localStorage 保存） */
 const SAMPLE_LABELS = {yakumono:'約物・詰め検証', bungaku:'漢字かな交じり', kana:'かな',
@@ -1598,8 +1854,8 @@ function updateSampleBtns(){
 }
 function setSampleText(text){
   state.text = text;
-  $('pvMain').textContent = text;
-  $('pvBase').textContent = text;
+  fillShifted($('pvMain'), text, mixShifts());
+  fillShifted($('pvBase'), text, mixShifts());
   renderInstView();
 }
 $('textSel').addEventListener('change', e=>{
@@ -1650,9 +1906,18 @@ $('sampleDel').addEventListener('click', ()=>{
   renderSampleSel('b:yakumono');
   toast('「'+s.name+'」を削除しました（テキストはそのまま）');
 });
-$('pvMain').addEventListener('input', ()=>{
+/* シフト中は入力のたびに文字種ごとの span を組み直す（IME の変換中は確定まで待つ） */
+let composing = false;
+$('pvMain').addEventListener('compositionstart', ()=>{ composing = true; });
+$('pvMain').addEventListener('compositionend', ()=>{
+  composing = false;
   state.text = $('pvMain').innerText;
-  if (state.compare) $('pvBase').textContent = state.text;
+  if (Object.keys(mixShifts()).length) renderPreviewText();
+});
+$('pvMain').addEventListener('input', e=>{
+  state.text = $('pvMain').innerText;
+  if (Object.keys(mixShifts()).length && !composing && !e.isComposing) renderPreviewText();
+  else if (state.compare) fillShifted($('pvBase'), state.text, mixShifts());
   renderInstView();
 });
 

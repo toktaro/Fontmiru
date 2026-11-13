@@ -18,18 +18,19 @@ Fontmiru is built with Japanese fonts in mind: you can also check how fonts beha
 ### Preview
 
 - **Horizontal / Vertical**: Switch writing mode with one click. In vertical mode you can also check `vert` glyphs and the orientation of Latin text (`text-orientation`)
-- **OpenType Feature Toggles**: Lists every feature the font contains and lets you set each one to Default / ON / OFF. Japanese-related features (`palt` `vpal` `pkna` `kern` `vkrn` `halt` `vhal` `chws` and more) are listed first
+- **OpenType Feature Toggles**: Lists every feature the font contains and lets you set each one to Default / ON / OFF. Japanese-related features (`palt` `vpal` `pkna` `kern` `vkrn` `halt` `vhal` `chws` and more) are listed first. The ⓘ next to each feature opens its description in the Microsoft OpenType specification
+- **Proportional**: When checked, `palt` is turned on for horizontal text and `vpal` for vertical text (the other one is turned off), following the writing mode as you switch it
 - **Compare with Default**: Shows the text with and without your feature settings side by side
-- **1em Grid**: Changes in advance widths caused by proportional metrics become visible against the grid
+- **1em Grid**: Changes in advance widths caused by proportional metrics become visible against the grid. Turning it on sets line height to 1.00 and letter spacing to 0, and the grid stays aligned with the lines in vertical text as well
 - **Layout Controls**: Size, line height and letter spacing via sliders or numeric input, plus start / center / end alignment
 - **Sample Text**: Presets for punctuation, kana, mixed Japanese/Latin text and more, and you can save your own edited text as "My Samples"
-- **Font Mixing**: Using the selected font as the base, assign a different font to each character class — Kanji / Hiragana / Katakana / Punctuation & Symbols / Latin / Digits (e.g. a kana font combined with kanji from another font). A size ratio can be set per class
+- **Font Mixing**: Using the selected font as the base, assign a different font to each character class — Kanji / Hiragana / Katakana / Punctuation & Symbols / Latin / Digits (e.g. a kana font combined with kanji from another font). A size ratio and a baseline shift can be set per class, and "文字中心で拡大・縮小" (Scale from Character Center) switches the scaling origin from the baseline to the center of the em box
 
 ### Variable Fonts
 
 - **Axis Controls**: Parses `fvar` and provides a slider and numeric input for each axis
 - **Named Instances**: Apply an instance from the list, or view all instances side by side
-- **Animation**: Sweep any axis back and forth automatically to watch it change
+- **Animation**: Sweep any axis back and forth automatically to watch it change. Each press of ▶ cycles the speed through 1× → 2× → 3× → 0.5×, and ■ stops it
 
 ### Glyph List
 
@@ -66,7 +67,8 @@ Fontmiru is built with Japanese fonts in mind: you can also check how fonts beha
 
 1. Load the base font (e.g. a kana font) and the font you want to combine with it (e.g. a kanji font)
 2. Select the base font in the font list
-3. Turn on "混植" (Font Mixing) in the sidebar and choose a font and size ratio for each character class
+3. Turn on "混植" (Font Mixing) in the sidebar and choose a font for each character class
+4. If needed, adjust "比率" (size ratio) and "シフト" (baseline shift, as a percentage of 1em; positive moves up in horizontal text and right in vertical text) per class. To keep scaled characters centered in the em box, turn on "文字中心で拡大・縮小" (Scale from Character Center)
 
 ### About Favorites
 
@@ -92,8 +94,12 @@ Browsers cannot reopen a file from its location on disk, so a favorited font is 
 - The glyph list only shows glyphs that have a character code assigned (glyphs without one, such as `vert` alternates, cannot be displayed)
 - How proportional metrics and kerning are rendered depends on the browser's text shaping
 - Glyph metrics are the values of the default instance (variable font deltas are not applied). For CFF-outline fonts, the bounding box is an approximation measured by the browser
-- Font mixing switches fonts character by character, so kerning between characters from different fonts, and OpenType features that depend on neighboring characters, do not apply. Size ratios scale from the baseline
+- Font mixing switches fonts character by character, so kerning between characters from different fonts, and OpenType features that depend on neighboring characters, do not apply. Size ratios scale from the baseline by default (switchable to the em-box center). While a baseline shift is in use, undo (⌘Z) may not work reliably when editing the preview text
 - `cmap` formats 4 and 12 are supported
+
+## Changelog
+
+Changes made after the initial release are listed in [CHANGELOG.md](CHANGELOG.md) (in Japanese). The version shown at the bottom of the sidebar (e.g. `Beta (202611)`) is the year and month of the latest feature update.
 
 ## License
 
